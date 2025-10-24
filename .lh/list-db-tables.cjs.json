@@ -1,0 +1,18 @@
+{
+    "sourceFile": "list-db-tables.cjs",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1760436677471,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1760436677470,
+            "name": "Commit-0",
+            "content": "// List all tables in the database\r\nconst { Pool } = require('pg');\r\n\r\nconst pool = new Pool({\r\n  user: 'postgres',\r\n  host: 'localhost',\r\n  database: 'mapit',\r\n  password: 'NewStrongPass123',\r\n  port: 5432,\r\n});\r\n\r\nasync function listTables() {\r\n  try {\r\n    const result = await pool.query(`\r\n      SELECT table_name \r\n      FROM information_schema.tables \r\n      WHERE table_schema = 'public' \r\n      ORDER BY table_name;\r\n    `);\r\n    \r\n    console.log('\\n=== DATABASE TABLES ===');\r\n    result.rows.forEach(row => {\r\n      console.log(`- ${row.table_name}`);\r\n    });\r\n    console.log(`\\nTotal tables: ${result.rows.length}`);\r\n    \r\n    // Check customer table structure\r\n    console.log('\\n=== CUSTOMER TABLE STRUCTURE ===');\r\n    const customerStructure = await pool.query(`\r\n      SELECT column_name, data_type, is_nullable\r\n      FROM information_schema.columns\r\n      WHERE table_name = 'customer'\r\n      ORDER BY ordinal_position;\r\n    `);\r\n    customerStructure.rows.forEach(row => {\r\n      console.log(`${row.column_name}: ${row.data_type} (${row.is_nullable === 'YES' ? 'NULL' : 'NOT NULL'})`);\r\n    });\r\n    \r\n    // Check for sample customer\r\n    console.log('\\n=== SAMPLE CUSTOMER DATA ===');\r\n    const sampleCustomer = await pool.query(`\r\n      SELECT customer_id, email, username \r\n      FROM customer \r\n      LIMIT 5;\r\n    `);\r\n    console.log('Sample customers:', sampleCustomer.rows);\r\n    \r\n  } catch (error) {\r\n    console.error('Error:', error.message);\r\n  } finally {\r\n    await pool.end();\r\n  }\r\n}\r\n\r\nlistTables();\r\n"
+        }
+    ]
+}

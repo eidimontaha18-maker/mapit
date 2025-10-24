@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Countries in English</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .countries-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        .country-card {
+            background-color: #fff;
+            border-radius: 5px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .country-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        .country-name {
+            font-weight: 500;
+            font-size: 16px;
+            margin: 0;
+        }
+        .search-container {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        #searchInput {
+            padding: 10px;
+            width: 300px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .stats {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+        }
+        .letter-index {
+            background-color: #e0e0e0;
+            padding: 5px 10px;
+            border-radius: 3px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>All Countries (English Names)</h1>
+    
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="Search country..." autocomplete="off">
+    </div>
+    
+    <div id="countriesContainer" class="countries-container"></div>
+    
+    <div class="stats" id="statsContainer"></div>
+
+    <script>
+        // Load and display the countries
+        async function loadCountries() {
+            try {
+                const response = await fetch('/src/assets/allCountries.json');
+                const countriesData = await response.json();
+                
+                // Get country names and sort alphabetically
+                const countryNames = Object.keys(countriesData).sort();
+                
+                // Group countries by first letter
+                const groupedCountries = {};
+                countryNames.forEach(name => {
+                    const firstLetter = name.charAt(0).toUpperCase();
+                    if (!groupedCountries[firstLetter]) {
+                        groupedCountries[firstLetter] = [];
+                    }
+                    groupedCountries[firstLetter].push(name);
+                });
+                
+                // Display countries
+                const container = document.getElementById('countriesContainer');
+                container.innerHTML = '';
+                
+                // Get all letters and sort them
+                const letters = Object.keys(groupedCountries).sort();
+                
+                letters.forEach(letter => {
+                    // Add letter header
+                    const letterHeader = document.createElement('div');
+                    letterHeader.className = 'letter-index';
+                    letterHeader.textContent = letter;
+                    letterHeader.style.gridColumn = '1 / -1';
+                    container.appendChild(letterHeader);
+                    
+                    // Add countries for this letter
+                    groupedCountries[letter].forEach(name => {
+                        const card = document.createElement('div');
+                        card.className = 'country-card';
+                        card.innerHTML = `<p class="country-name">${name}</p>`;
+                        container.appendChild(card);
+                    });
+                });
+                
+                // Update stats
+                document.getElementById('statsContainer').textContent = `Total: ${countryNames.length} countries`;
+                
+                // Add search functionality
+                document.getElementById('searchInput').addEventListener('input', function() {
+                    filterCountries(this.value.toLowerCase(), countryNames);
+                });
+                
+            } catch (error) {
+                console.error('Error loading countries:', error);
+                document.getElementById('countriesContainer').innerHTML = 
+                    `<p style="color: red; grid-column: 1 / -1;">Error loading countries data. Please try again later.</p>`;
+            }
+        }
+        
+        // Filter countries based on search input
+        function filterCountries(searchText, allCountries) {
+            const container = document.getElementById('countriesContainer');
+            container.innerHTML = '';
+            
+            if (!searchText) {
+                // If search is cleared, reload all countries
+                loadCountries();
+                return;
+            }
+            
+            // Filter countries that match the search text
+            const filteredCountries = allCountries.filter(name => 
+                name.toLowerCase().includes(searchText)
+            );
+            
+            // Display filtered results
+            if (filteredCountries.length > 0) {
+                filteredCountries.forEach(name => {
+                    const card = document.createElement('div');
+                    card.className = 'country-card';
+                    
+                    // Highlight the matching text
+                    const regex = new RegExp(`(${searchText})`, 'gi');
+                    const highlightedName = name.replace(regex, '<mark>$1</mark>');
+                    
+                    card.innerHTML = `<p class="country-name">${highlightedName}</p>`;
+                    container.appendChild(card);
+                });
+                document.getElementById('statsContainer').textContent = `Found: ${filteredCountries.length} countries`;
+            } else {
+                container.innerHTML = '<p style="grid-column: 1 / -1; text-align: center;">No countries found matching your search.</p>';
+                document.getElementById('statsContainer').textContent = 'Found: 0 countries';
+            }
+        }
+        
+        // Load countries on page load
+        window.addEventListener('DOMContentLoaded', loadCountries);
+    </script>
+</body>
+</html>

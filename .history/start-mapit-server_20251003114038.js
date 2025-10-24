@@ -1,0 +1,27 @@
+// Simple server start script to help with launching and accessing the application
+import { spawn } from 'child_process';
+import open from 'open';
+
+console.log('Starting MapIt server...');
+
+// Start the server as a child process
+const server = spawn('node', ['server.js'], { 
+    stdio: 'inherit',
+    shell: true
+});
+
+// Handle server exit
+server.on('close', (code) => {
+    if (code !== 0) {
+        console.log(`Server process exited with code ${code}`);
+    }
+});
+
+// Open the browser after a short delay to ensure server is running
+setTimeout(() => {
+    console.log('Opening country & city search page in browser...');
+    open('http://localhost:3001/country-city-search.html')
+        .catch(err => console.error('Failed to open browser:', err));
+    
+    console.log('\nPress Ctrl+C to stop the server');
+}, 2000);

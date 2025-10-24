@@ -1,0 +1,848 @@
+import { MapContainer, TileLayer, useMap, Polygon, Tooltip } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import 'leaflet-draw/dist/leaflet.draw.css';
+import './WorldMap.css';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
+import L from 'leaflet';
+import 'leaflet-draw';
+import { COUNTRY_COORDINATES } from '../utils/countryCoordinates';
+import ZoneControls from './ZoneControls';
+import SaveMapButton from './SaveMapButton';
+import './ZoneControls.css';
+import { v4 as uuidv4 } from 'uuid';
+import type { Zone } from '../types/zones';
+import { notification } from '../utils/notification';
+
+// Fix for Leaflet marker icons in React
+// Using a more specific type for the prototype
+interface LeafletIcon {
+  _getIconUrl?: unknown;
+}
+
+// Fix for Leaflet marker icons in React
+delete (L.Icon.Default.prototype as LeafletIcon)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
+  iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+});
+
+const NAVBAR_HEIGHT = 56;
+
+interface WorldMapProps {
+  lat: number;
+  lng: number;
+  zoom: number;
+  highlightedCountry?: string;
+  initialZones?: Zone[];
+  mapId?: number;
+  onZoneCreated?: (zone: Zone) => void;
+  onBoundsChange?: (bounds: { north: number; south: number; east: number; west: number }) => void;
+  initialMapType?: 'road' | 'satellite' | 'hybrid' | 'terrain';
+  onMapTypeChange?: (type: 'road' | 'satellite' | 'hybrid' | 'terrain') => void;
+  isViewOnly?: boolean; // New prop to disable editing for admin
+}
+
+// Different tile layer URLs - matching Google Maps style
+const TILE_LAYERS = {
+  road: {
+    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attribution: '© OpenStreetMap contributors',
+    maxZoom: 22
+  },
+  satellite: {
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    attribution: '© Esri, Maxar, Earthstar Geographics',
+    maxZoom: 22
+  },
+  hybrid: {
+    base: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    overlay: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attribution: '© Esri, OpenStreetMap contributors',
+    maxZoom: 22
+  },
+  terrain: {
+    url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+    attribution: '© OpenTopoMap contributors',
+    maxZoom: 17
+  },
+  traffic: {
+    base: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attribution: '© OpenStreetMap contributors',
+    maxZoom: 22,
+    note: 'Traffic overlay would require a specific traffic data provider'
+  }
+};
+
+// Display saved zones as polygons
+const ZonesDisplay = React.memo(({ zones }: { zones: Zone[] }) => {
+  return (
+    <React.Fragment>
+      {zones.map((zone) => {
+        // Only render zones with coordinates
+        if (!zone.coordinates || zone.coordinates.length === 0) {
+          return null;
+        }
+        
+        return (
+          <Polygon 
+            key={zone.id} 
+            positions={zone.coordinates}
+            pathOptions={{ color: zone.color, fillColor: zone.color, fillOpacity: 0.3 }}
+          >
+            <Tooltip permanent>
+              {zone.name}
+            </Tooltip>
+          </Polygon>
+        );
+      })}
+    </React.Fragment>
+  );
+});
+
+// Separate component to use the useMap hook
+const PolygonDrawingControl = ({ 
+  onZoneCreated, 
+  isDrawing, 
+  zoneName, 
+  zoneColor 
+}: { 
+  onZoneCreated: (zone: Zone) => void;
+  isDrawing: boolean; 
+  zoneName: string; 
+  zoneColor: string 
+}) => {
+  const map = useMap();
+  const drawingLayerRef = useRef<L.FeatureGroup | null>(null);
+  
+  // Initialize the drawing layer
+  useEffect(() => {
+    // Create a FeatureGroup to store editable layers
+    const drawingLayer = new L.FeatureGroup();
+    map.addLayer(drawingLayer);
+    drawingLayerRef.current = drawingLayer;
+    
+    // Handle created polygon
+    const handleCreated = (e: L.LeafletEvent) => {
+      // Cast the event to access draw event properties
+      const drawEvent = e as unknown as { layer: L.Polygon; layerType: string };
+      const layer = drawEvent.layer;
+      
+      // Extract coordinates from the layer FIRST
+      const coords: [number, number][] = [];
+      if (layer.getLatLngs && typeof layer.getLatLngs === 'function') {
+        // For polygons, getLatLngs returns an array of arrays
+        const latLngGroups = layer.getLatLngs() as L.LatLng[][] | L.LatLng[][][];
+        const firstRing = Array.isArray(latLngGroups[0]) ? latLngGroups[0] as L.LatLng[] : latLngGroups as unknown as L.LatLng[];
+        for (const latLng of firstRing) {
+          coords.push([latLng.lat, latLng.lng]);
+        }
+      }
+      
+      console.log('🎯 Zone drawn with coordinates:', coords);
+      
+      // Don't add the layer to the drawing layer - let ZonesDisplay handle it
+      // The drawing layer is just for temporary drawing, not for permanent display
+      
+      // Create the zone object with coordinates
+      const newZone: Zone = {
+        id: uuidv4(),
+        name: zoneName,
+        color: zoneColor,
+        coordinates: coords
+      };
+      
+      // Notify parent component (this should end the drawing state)
+      onZoneCreated(newZone);
+    };
+    
+    // Add the event listener
+    map.on('draw:created', handleCreated);
+    
+    // Cleanup
+    return () => {
+      map.off('draw:created', handleCreated);
+      if (drawingLayerRef.current && map.hasLayer(drawingLayerRef.current)) {
+        map.removeLayer(drawingLayerRef.current);
+      }
+    };
+  }, [map, zoneName, zoneColor, onZoneCreated]);
+  
+  // Enable/disable drawing
+  useEffect(() => {
+    if (!map) return;
+    
+    if (isDrawing) {
+      try {
+        // Create a proper type for L.Draw.Polygon 
+        interface DrawOptions {
+          shapeOptions?: L.PathOptions;
+        }
+        
+        interface DrawPolygonStatic {
+          new(map: L.Map, options?: DrawOptions): L.Draw.Polygon;
+        }
+        
+        const DrawPolygon = L.Draw.Polygon as unknown as DrawPolygonStatic;
+        const drawControl = new DrawPolygon(map, {
+          shapeOptions: {
+            color: zoneColor,
+            fillColor: zoneColor,
+            fillOpacity: 0.3
+          }
+        });
+        drawControl.enable();
+        
+        // Cancel drawing when the isDrawing state changes
+        return () => {
+          drawControl.disable();
+        };
+      } catch (error) {
+        console.error('Error creating draw control:', error);
+      }
+    }
+  }, [map, isDrawing, zoneColor]);
+  
+  return null;
+};
+
+// Component to track map bounds and notify parent
+const BoundsTracker = ({ onBoundsChange }: { onBoundsChange: (bounds: { north: number; south: number; east: number; west: number }) => void }) => {
+  const map = useMap();
+
+  useEffect(() => {
+    const updateBounds = () => {
+      const bounds = map.getBounds();
+      const boundsObj = {
+        north: bounds.getNorth(),
+        south: bounds.getSouth(),
+        east: bounds.getEast(),
+        west: bounds.getWest()
+      };
+      onBoundsChange(boundsObj);
+    };
+
+    // Update bounds immediately
+    updateBounds();
+
+    // Update bounds when map moves or zooms
+    map.on('moveend', updateBounds);
+    map.on('zoomend', updateBounds);
+
+    return () => {
+      map.off('moveend', updateBounds);
+      map.off('zoomend', updateBounds);
+    };
+  }, [map, onBoundsChange]);
+
+  return null;
+};
+
+const WorldMap: React.FC<WorldMapProps> = ({
+  lat,
+  lng,
+  zoom,
+  highlightedCountry,
+  initialZones = [],
+  mapId,
+  onZoneCreated,
+  onBoundsChange,
+  initialMapType = 'road',
+  onMapTypeChange,
+  isViewOnly = false // Default to false for backward compatibility
+}) => {
+  const mapRef = useRef<L.Map | null>(null);
+  const [zones, setZones] = useState<Zone[]>([]);
+  const [isDrawing, setIsDrawing] = useState<boolean>(false);
+  const [currentZoneDetails, setCurrentZoneDetails] = useState<{ name: string; color: string }>({ name: "", color: "#3388ff" });
+  const [mapInfo, setMapInfo] = useState<{ code: string; title: string } | null>(null);
+  const [isSavingZone, setIsSavingZone] = useState<boolean>(false);
+  const initialZonesLoadedRef = useRef(false);
+  
+  // Layer management state - use initialMapType from props
+  const [currentMapType, setCurrentMapType] = useState<'road' | 'satellite' | 'hybrid' | 'terrain' | 'traffic'>(initialMapType);
+  
+  // Generate map code for new maps
+  const generateMapCode = useCallback((): string => {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = 'MAP-';
+    
+    for (let i = 0; i < 4; i++) {
+      result += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    
+    result += '-';
+    
+    for (let i = 0; i < 4; i++) {
+      result += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    
+    return result;
+  }, []);
+  
+  // Generate map code on mount if no mapId exists
+  useEffect(() => {
+    if (!mapId && !mapInfo) {
+      const newCode = generateMapCode();
+      console.log('🔖 Generated new map code for unsaved map:', newCode);
+      setMapInfo({
+        code: newCode,
+        title: 'New Map'
+      });
+    }
+  }, [mapId, mapInfo, generateMapCode]);
+
+  // Update map type when prop changes
+  useEffect(() => {
+    setCurrentMapType(initialMapType);
+  }, [initialMapType]);
+
+  // Load zones from database or use initialZones (run only once)
+  useEffect(() => {
+    const loadZones = async () => {
+      console.log('🔍 WorldMap loadZones effect triggered, mapId:', mapId);
+      
+      // Prevent loading if already loaded
+      if (initialZonesLoadedRef.current) {
+        console.log('⏭️ Zones already loaded, skipping');
+        return;
+      }
+      
+      if (!mapId) {
+        // Use initialZones if provided, otherwise empty array
+        if (initialZones && initialZones.length > 0) {
+          console.log('📥 Using initialZones:', initialZones.length);
+          setZones(initialZones);
+          initialZonesLoadedRef.current = true;
+        } else {
+          console.log('❌ No mapId provided, no zones to load');
+        }
+        return;
+      }
+      
+      try {
+        console.log(`🌐 Loading zones for map ID: ${mapId}`);
+        const response = await fetch(`/api/map/${mapId}/zones`);
+        const data = await response.json();
+        
+        console.log('📊 Zones API response:', data);
+        
+        if (data.success && Array.isArray(data.zones)) {
+          // Parse coordinates from JSON strings if needed
+          const zonesWithParsedCoords = data.zones.map((zone: Zone & { coordinates: string | [number, number][] }) => ({
+            ...zone,
+            coordinates: typeof zone.coordinates === 'string' 
+              ? JSON.parse(zone.coordinates) 
+              : zone.coordinates
+          }));
+          
+          setZones(zonesWithParsedCoords);
+          initialZonesLoadedRef.current = true;
+          console.log(`✅ Loaded ${zonesWithParsedCoords.length} zones for map ${mapId}`);
+        } else {
+          console.log('⚠️ No zones found for this map');
+          setZones([]);
+          initialZonesLoadedRef.current = true;
+        }
+      } catch (err) {
+        console.error('❌ Failed to load zones:', err);
+        setZones([]);
+      }
+    };
+    
+    loadZones();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mapId]); // Only depend on mapId, not initialZones to prevent infinite loop
+
+  // Load map information when mapId changes
+  useEffect(() => {
+    const loadMapInfo = async () => {
+      if (!mapId) {
+        setMapInfo(null);
+        return;
+      }
+      
+      try {
+        const response = await fetch(`/api/db/tables/map/${mapId}`);
+        const data = await response.json();
+        
+        if (data.success && data.record) {
+          const mapCode = data.record.map_code || `MAP-${mapId}`;
+          
+          setMapInfo({
+            code: mapCode,
+            title: data.record.title || 'Untitled Map'
+          });
+        }
+      } catch (err) {
+        console.error('Failed to load map info:', err);
+        setMapInfo(null);
+      }
+    };
+    
+    loadMapInfo();
+  }, [mapId]);
+
+  // Update map view when highlighted country changes
+  useEffect(() => {
+    if (highlightedCountry && COUNTRY_COORDINATES[highlightedCountry] && mapRef.current) {
+      const { lat: countryLat, lng: countryLng, zoom: countryZoom } = COUNTRY_COORDINATES[highlightedCountry];
+      mapRef.current.setView([countryLat, countryLng], countryZoom, { animate: true });
+    }
+  }, [highlightedCountry]);
+
+  // Update map when lat/lng/zoom changes
+  useEffect(() => {
+    if (mapRef.current && lat && lng) {
+      mapRef.current.setView([lat, lng], zoom, { animate: true });
+    }
+  }, [lat, lng, zoom]);
+
+  // Handle starting to draw a zone
+  const handleStartDrawing = useCallback((name: string, color: string) => {
+    if (!name.trim()) {
+      notification.warning("Please enter a zone name");
+      return;
+    }
+    
+    console.log(`🎨 Starting to draw zone: ${name} (${color})`);
+    setIsDrawing(true);
+    setCurrentZoneDetails({ name, color });
+  }, []);
+
+  const handleCancelDrawing = useCallback(() => {
+    console.log('❌ Cancelled zone drawing');
+    setIsDrawing(false);
+  }, []);
+
+  // Handle zone creation callback from PolygonDrawingControl
+  const handleZoneCreated = useCallback(async (zoneData: Zone) => {
+    console.log('💾 Zone created, processing...', zoneData);
+    
+    // Add to local state IMMEDIATELY for visual feedback
+    setZones(prev => [...prev, zoneData]);
+    
+    // End drawing state immediately
+    setIsDrawing(false);
+    
+    // If external handler is provided (like from CreateMapPage), use it
+    if (onZoneCreated) {
+      console.log('📤 Delegating zone creation to external handler');
+      onZoneCreated(zoneData);
+      return;
+    }
+    
+    setIsSavingZone(true);
+    try {
+      // Save zone to database first with proper customer linking
+      if (mapId) {
+        // First get the map owner to set customer_id
+        const mapResponse = await fetch(`/api/map/${mapId}`);
+        const mapData = await mapResponse.json();
+        
+        let customer_id = null;
+        if (mapData.success && mapData.map) {
+          customer_id = mapData.map.customer_id;
+        }
+        
+        console.log('🏪 Saving zone with customer_id:', customer_id);
+        
+        // Save to zones table with customer_id
+        const response = await fetch('/api/zone', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            map_id: mapId,
+            customer_id: customer_id,
+            name: zoneData.name,
+            color: zoneData.color,
+            coordinates: zoneData.coordinates
+          })
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+          console.log('✅ Zone saved successfully:', result);
+          
+          // Update the zone in local state with the ID from database
+          if (result.zone && result.zone.id) {
+            setZones(prev => prev.map(z => 
+              z.id === zoneData.id ? { ...z, id: result.zone.id } : z
+            ));
+            console.log(`🔄 Updated zone ID: ${zoneData.id} → ${result.zone.id}`);
+          }
+          
+          // Show success message without blocking the UI
+          setTimeout(() => {
+            const successMsg = document.createElement('div');
+            successMsg.innerHTML = `
+              <div style="
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                background-color: #28a745;
+                color: white;
+                padding: 15px 20px;
+                border-radius: 5px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+                z-index: 2000;
+                animation: fadeIn 0.5s, fadeOut 0.5s 3.5s forwards;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+              ">
+                <span style="font-size: 20px;">✅</span>
+                <div>
+                  <strong>Success!</strong><br>
+                  Zone "${zoneData.name}" saved to database
+                </div>
+              </div>
+              <style>
+                @keyframes fadeIn {
+                  from { opacity: 0; transform: translateY(20px); }
+                  to { opacity: 1; transform: translateY(0); }
+                }
+                @keyframes fadeOut {
+                  from { opacity: 1; transform: translateY(0); }
+                  to { opacity: 0; transform: translateY(-20px); }
+                }
+              </style>
+            `;
+            document.body.appendChild(successMsg);
+            
+            // Remove notification after 4 seconds
+            setTimeout(() => {
+              document.body.removeChild(successMsg);
+            }, 4000);
+          }, 100);
+        } else {
+          console.error('❌ Failed to save zone:', result.error);
+          notification.error('Failed to save zone: ' + result.error);
+        }
+      } else {
+        console.warn('⚠️ No mapId provided, zone not saved to database');
+        // Zone already added to local state above
+        notification.warning(`Zone "${zoneData.name}" created locally (not saved to database)`);
+      }
+    } catch (err) {
+      console.error('❌ Failed to save zone:', err);
+      // Zone already added to local state above
+      notification.error('Zone created but failed to save to database. Please try again later.');
+    } finally {
+      setIsSavingZone(false);
+    }
+  }, [mapId, onZoneCreated]);
+
+  // Handle deleting a zone
+  const handleDeleteZone = useCallback(async (id: string) => {
+    console.log('🗑️ Deleting zone:', id);
+    
+    // Always remove from UI immediately for better UX
+    setZones(prev => prev.filter(z => z.id !== id));
+    
+    try {
+      // Delete from database
+      const response = await fetch(`/api/zone/${id}`, {
+        method: 'DELETE'
+      });
+      
+      if (!response.ok) {
+        console.warn(`⚠️ Failed to delete zone from database (${response.status}), but removed from UI`);
+        return; // Already removed from UI, no need to alert
+      }
+      
+      const result = await response.json();
+      if (result.success) {
+        console.log('✅ Zone deleted from database successfully');
+      } else {
+        console.warn('⚠️ Zone deleted from UI but database returned:', result.error);
+      }
+    } catch (err) {
+      console.warn('⚠️ Zone deleted from UI but database request failed:', err);
+      // Don't show error to user since zone is already removed from UI
+    }
+  }, []);
+
+  // Handle map type change
+  const handleMapTypeChange = useCallback((mapType: 'road' | 'satellite' | 'hybrid' | 'terrain' | 'traffic') => {
+    console.log('🗺️ Changing map type to:', mapType);
+    setCurrentMapType(mapType);
+    
+    // Notify parent component if callback provided
+    if (onMapTypeChange && mapType !== 'traffic') {
+      onMapTypeChange(mapType);
+    }
+  }, [onMapTypeChange]);
+
+  // Handle saving all zones (manual save)
+  const handleSaveAllZones = useCallback(async () => {
+    console.log('💾 Manually saving all zones to database...', zones.length);
+    
+    if (zones.length === 0) {
+      alert('No zones to save.');
+      return;
+    }
+
+    if (!mapId) {
+      alert('Cannot save zones: Map not saved yet. Please save the map first.');
+      return;
+    }
+
+    setIsSavingZone(true);
+    try {
+      // First get customer_id from the map
+      const mapResponse = await fetch(`/api/map/${mapId}`);
+      const mapData = await mapResponse.json();
+      
+      let customer_id = null;
+      if (mapData.success && mapData.map) {
+        customer_id = mapData.map.customer_id;
+      }
+
+      let successCount = 0;
+      let errorCount = 0;
+
+      // Try to create zones instead of updating them
+      for (const zone of zones) {
+        try {
+          // Always try to CREATE the zone (POST), backend will handle duplicates
+          const response = await fetch('/api/zones', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              id: zone.id,
+              name: zone.name,
+              color: zone.color,
+              coordinates: zone.coordinates,
+              map_id: mapId,
+              customer_id: customer_id
+            })
+          });
+
+          const result = await response.json();
+          if (result.success) {
+            successCount++;
+            console.log(`✅ Zone "${zone.name}" saved successfully`);
+          } else {
+            errorCount++;
+            console.error('❌ Failed to save zone:', zone.name, result.error);
+          }
+        } catch (err) {
+          errorCount++;
+          console.error('❌ Error saving zone:', zone.name, err);
+        }
+      }
+
+      // Create a fancy notification instead of alert
+      const notificationDiv = document.createElement('div');
+      if (errorCount === 0) {
+        notificationDiv.innerHTML = `
+          <div style="
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #28a745;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            z-index: 2000;
+            animation: fadeInOut 4s forwards;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 16px;
+          ">
+            <span style="font-size: 24px;">✅</span>
+            <div>
+              <strong>Success!</strong><br>
+              All ${successCount} zones saved to database
+            </div>
+          </div>
+          <style>
+            @keyframes fadeInOut {
+              0% { opacity: 0; transform: translate(-50%, -20px); }
+              10% { opacity: 1; transform: translate(-50%, 0); }
+              80% { opacity: 1; transform: translate(-50%, 0); }
+              100% { opacity: 0; transform: translate(-50%, -20px); }
+            }
+          </style>
+        `;
+      } else {
+        notificationDiv.innerHTML = `
+          <div style="
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #ffc107;
+            color: #333;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 2000;
+            animation: fadeInOut 5s forwards;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 16px;
+          ">
+            <span style="font-size: 24px;">⚠️</span>
+            <div>
+              <strong>Partial Success</strong><br>
+              Saved ${successCount} zones, ${errorCount} failed.<br>
+              <small>Check console for details.</small>
+            </div>
+          </div>
+          <style>
+            @keyframes fadeInOut {
+              0% { opacity: 0; transform: translate(-50%, -20px); }
+              10% { opacity: 1; transform: translate(-50%, 0); }
+              80% { opacity: 1; transform: translate(-50%, 0); }
+              100% { opacity: 0; transform: translate(-50%, -20px); }
+            }
+          </style>
+        `;
+      }
+      
+      document.body.appendChild(notificationDiv);
+      
+      // Remove notification after animation completes
+      setTimeout(() => {
+        if (document.body.contains(notificationDiv)) {
+          document.body.removeChild(notificationDiv);
+        }
+      }, 5000);
+    } catch (err) {
+      console.error('❌ Error during bulk save:', err);
+      alert('Error saving zones. Please try again.');
+    } finally {
+      setIsSavingZone(false);
+    }
+  }, [zones, mapId]);
+
+  return (
+    <div style={{ position: 'fixed', top: NAVBAR_HEIGHT, left: 0, width: '100vw', height: `calc(100vh - ${NAVBAR_HEIGHT}px)`, zIndex: 1 }}>
+      <MapContainer
+        center={[lat, lng]}
+        zoom={zoom}
+        minZoom={1}
+        maxZoom={22}
+        style={{ width: '100%', height: '100%' }}
+        attributionControl={false}
+        zoomControl={true}
+        scrollWheelZoom={true}
+        doubleClickZoom={true}
+        preferCanvas={false}
+        ref={(map) => {
+          if (map) {
+            mapRef.current = map;
+          }
+        }}
+      >
+        {/* Render map tiles based on current map type */}
+        {currentMapType === 'hybrid' ? (
+          <>
+            {/* Hybrid: Satellite base + Road overlay */}
+            <TileLayer 
+              url={TILE_LAYERS.hybrid.base}
+              attribution={TILE_LAYERS.hybrid.attribution}
+              maxZoom={TILE_LAYERS.hybrid.maxZoom}
+              errorTileUrl="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+            />
+            <TileLayer 
+              url={TILE_LAYERS.hybrid.overlay}
+              opacity={0.5}
+              maxZoom={TILE_LAYERS.hybrid.maxZoom}
+              errorTileUrl="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+            />
+          </>
+        ) : currentMapType === 'traffic' ? (
+          <>
+            {/* Traffic: Road base (traffic overlay would need separate provider) */}
+            <TileLayer 
+              url={TILE_LAYERS.traffic.base}
+              attribution={TILE_LAYERS.traffic.attribution}
+              maxZoom={TILE_LAYERS.traffic.maxZoom}
+              errorTileUrl="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+            />
+            {/* Note: Real traffic data would require services like Google Maps Traffic API */}
+          </>
+        ) : (
+          /* Standard map types: road, satellite, terrain */
+          <TileLayer 
+            url={TILE_LAYERS[currentMapType].url}
+            attribution={TILE_LAYERS[currentMapType].attribution}
+            maxZoom={TILE_LAYERS[currentMapType].maxZoom}
+            errorTileUrl="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+          />
+        )}
+        
+        {/* Display all saved zones */}
+        <ZonesDisplay zones={zones} />
+      
+        {/* Show drawing controls only when actively drawing */}
+        {isDrawing && (
+          <PolygonDrawingControl 
+            onZoneCreated={handleZoneCreated}
+            isDrawing={isDrawing}
+            zoneName={currentZoneDetails.name}
+            zoneColor={currentZoneDetails.color}
+          />
+        )}
+        
+        {/* Track map bounds changes */}
+        {onBoundsChange && <BoundsTracker onBoundsChange={onBoundsChange} />}
+      </MapContainer>
+
+      <ZoneControls
+        zones={zones}
+        isDrawing={isDrawing}
+        onCancelDrawing={handleCancelDrawing}
+        onCreateZone={handleStartDrawing}
+        onDeleteZone={handleDeleteZone}
+        isSavingZone={isSavingZone}
+        onSaveAllZones={handleSaveAllZones}
+        currentMapType={currentMapType === 'traffic' ? 'road' : currentMapType}
+        onMapTypeChange={handleMapTypeChange}
+        isViewOnly={isViewOnly} // Pass view-only mode to controls
+      />
+      
+      {/* Hide Save button in view-only mode */}
+      {!isViewOnly && (
+        <SaveMapButton 
+          onClick={handleSaveAllZones} 
+          isVisible={zones.length > 0 && !isDrawing && mapId !== undefined} 
+          isSaving={isSavingZone}
+        />
+      )}
+      
+      {highlightedCountry && (
+        <div style={{
+          position: 'absolute',
+          top: '20px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          backgroundColor: 'rgba(255,255,255,0.9)',
+          padding: '8px 16px',
+          borderRadius: '20px',
+          boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
+          zIndex: 1000,
+          pointerEvents: 'none',
+          fontSize: '16px',
+          fontWeight: 'bold',
+          color: '#4f8cff'
+        }}>
+          {highlightedCountry}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default WorldMap;

@@ -1,0 +1,18 @@
+{
+    "sourceFile": "scripts/check_zones_map31.js",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1761204747466,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1761204747465,
+            "name": "Commit-0",
+            "content": "import pg from 'pg';\r\nimport dotenv from 'dotenv';\r\n\r\ndotenv.config();\r\n\r\nconst { Pool } = pg;\r\n\r\nconst pool = new Pool({\r\n  host: process.env.DB_HOST || 'localhost',\r\n  port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : 5432,\r\n  database: process.env.DB_NAME || 'mapit',\r\n  user: process.env.DB_USER || 'postgres',\r\n  password: process.env.DB_PASSWORD || ''\r\n});\r\n\r\nasync function run() {\r\n  try {\r\n    const res = await pool.query('SELECT id, map_id, name, created_at FROM zones WHERE map_id = $1 ORDER BY created_at ASC', [31]);\r\n    console.log(`Found ${res.rows.length} zone(s) for map_id=31`);\r\n    if (res.rows.length > 0) console.table(res.rows);\r\n  } catch (err) {\r\n    console.error('DB query error:', err);\r\n  } finally {\r\n    await pool.end();\r\n  }\r\n}\r\n\r\nrun();\r\n"
+        }
+    ]
+}

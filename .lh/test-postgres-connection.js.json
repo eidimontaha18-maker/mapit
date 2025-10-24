@@ -1,0 +1,18 @@
+{
+    "sourceFile": "test-postgres-connection.js",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1760432391341,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1760432391341,
+            "name": "Commit-0",
+            "content": "/**\r\n * Test PostgreSQL connection and list tables\r\n */\r\n\r\nimport pg from 'pg';\r\nconst { Pool } = pg;\r\n\r\nconst pool = new Pool({\r\n  connectionString: 'postgres://postgres:NewStrongPass123@localhost:5432/mapit'\r\n});\r\n\r\nasync function testConnection() {\r\n  try {\r\n    console.log('Connecting to PostgreSQL database...');\r\n    \r\n    // Test connection\r\n    const result = await pool.query('SELECT NOW() as now, current_database() as db');\r\n    console.log('✅ Connected successfully!');\r\n    console.log('📅 Database time:', result.rows[0].now);\r\n    console.log('🗄️  Database name:', result.rows[0].db);\r\n    \r\n    // List all tables\r\n    console.log('\\n📋 Tables in database:');\r\n    const tables = await pool.query(`\r\n      SELECT table_name, table_type\r\n      FROM information_schema.tables\r\n      WHERE table_schema = 'public'\r\n      ORDER BY table_name\r\n    `);\r\n    \r\n    if (tables.rows.length === 0) {\r\n      console.log('   No tables found in public schema');\r\n    } else {\r\n      tables.rows.forEach((row, idx) => {\r\n        console.log(`   ${idx + 1}. ${row.table_name} (${row.table_type})`);\r\n      });\r\n    }\r\n    \r\n    // Get column info for each table\r\n    console.log('\\n📊 Table structures:');\r\n    for (const table of tables.rows) {\r\n      const columns = await pool.query(`\r\n        SELECT column_name, data_type, is_nullable, column_default\r\n        FROM information_schema.columns\r\n        WHERE table_schema = 'public' AND table_name = $1\r\n        ORDER BY ordinal_position\r\n      `, [table.table_name]);\r\n      \r\n      console.log(`\\n   ${table.table_name}:`);\r\n      columns.rows.forEach(col => {\r\n        console.log(`      - ${col.column_name} (${col.data_type})${col.is_nullable === 'NO' ? ' NOT NULL' : ''}`);\r\n      });\r\n    }\r\n    \r\n    await pool.end();\r\n    console.log('\\n✅ Test completed successfully!');\r\n  } catch (error) {\r\n    console.error('❌ Error:', error.message);\r\n    console.error('Details:', error);\r\n    await pool.end();\r\n    process.exit(1);\r\n  }\r\n}\r\n\r\ntestConnection();\r\n"
+        }
+    ]
+}

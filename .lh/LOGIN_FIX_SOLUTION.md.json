@@ -1,0 +1,18 @@
+{
+    "sourceFile": "LOGIN_FIX_SOLUTION.md",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1760436969164,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1760436969164,
+            "name": "Commit-0",
+            "content": "# Login Error 500 - SOLUTION\r\n\r\n## Problem Analysis\r\nThe login was failing with status 500 because **the backend API server was not running**.\r\n\r\n## Database Connection - ✅ CONFIRMED WORKING\r\n- Successfully connected to PostgreSQL database at `localhost:5432/mapit`\r\n- Tables found: `customer`, `customer_map`, `map`, `zones`\r\n- **13 customers** found in the database\r\n- Customer table structure:\r\n  - customer_id (integer, NOT NULL)\r\n  - first_name (varchar, NOT NULL)\r\n  - last_name (varchar, NOT NULL)  \r\n  - email (varchar, NOT NULL)\r\n  - password_hash (varchar, NOT NULL)\r\n  - registration_date (timestamp)\r\n\r\n## The Solution\r\n\r\nYour application requires **TWO servers** to run simultaneously:\r\n\r\n### 1. Backend API Server (Port 3101)\r\nThis handles all `/api/*` requests including login and registration.\r\n\r\n**Start command:**\r\n```powershell\r\nnode simple-login-server.js\r\n```\r\n\r\nThis server is now running at: `http://127.0.0.1:3101`\r\n\r\n### 2. Frontend Vite Server (Port 5173) \r\nThis serves your React application.\r\n\r\n**Start command:**\r\n```powershell\r\nnpm run dev\r\n```\r\n\r\nThe Vite config automatically proxies `/api/*` requests to `http://localhost:3101`\r\n\r\n## How to Run Your Application\r\n\r\n### Option 1: Two Terminals (Recommended for Development)\r\n\r\n**Terminal 1 - Backend:**\r\n```powershell\r\nnode simple-login-server.js\r\n```\r\n\r\n**Terminal 2 - Frontend:**\r\n```powershell\r\nnpm run dev\r\n```\r\n\r\n### Option 2: Use the Full Dev Script\r\nYou could update `package.json` to run both simultaneously:\r\n\r\n```json\r\n\"scripts\": {\r\n  \"dev:backend\": \"node simple-login-server.js\",\r\n  \"dev:frontend\": \"vite\",\r\n  \"dev:full\": \"concurrently \\\"npm run dev:backend\\\" \\\"npm run dev:frontend\\\"\"\r\n}\r\n```\r\n\r\n## Test Users Available\r\n\r\nYou can login with these existing users:\r\n\r\n| Email | Password (Encrypted) |\r\n|-------|---------------------|\r\n| alice@example.com | Password123! |\r\n| bob@example.com | Password123! |\r\n| charlie@example.com | Password123! |\r\n| eidimontaha20@gmail.com | (bcrypt hashed) |\r\n\r\n## API Endpoints Available\r\n\r\n- `POST /api/register` - Register new user\r\n- `POST /api/login` - Login existing user  \r\n- `GET /api/health` - Check server status\r\n\r\n## Next Steps\r\n\r\n1. ✅ Backend server is running on port 3101\r\n2. ⏳ Start frontend: Run `npm run dev` in a new terminal\r\n3. ⏳ Open browser to `http://localhost:5173`\r\n4. ⏳ Try logging in with alice@example.com / Password123!\r\n\r\n## Files Modified\r\n\r\n- Created `simple-login-server.js` - Simplified backend server with login/register endpoints\r\n- Vite config already has proxy setup to forward `/api` requests to port 3101\r\n\r\nThe login should now work once you start the frontend with `npm run dev`!\r\n"
+        }
+    ]
+}

@@ -1,0 +1,113 @@
+.app-navbar {
+  width: 100vw;
+  height: 56px;
+  background: linear-gradient(90deg, #4f8cff 0%, #a1e3ff 100%);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(79,140,255,0.10);
+}
+.app-navbar-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: 32px;
+}
+.app-navbar-title {
+  font-size: 1.5em;
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-shadow: 0 2px 8px #4f8cff22;
+}
+.app-navbar-actions {
+  margin-right: 32px;
+}
+.app-navbar-logout {
+  background: #fff;
+  color: #4f8cff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 22px;
+  font-size: 1em;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(79,140,255,0.10);
+  transition: background 0.2s, color 0.2s;
+}
+.app-navbar-logout:hover {
+  background: #4f8cff;
+  color: #fff;
+}
+
+.auth-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.app-navbar-login, .app-navbar-signup {
+  padding: 8px 22px;
+  border-radius: 8px;
+  font-size: 1em;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.2s, color 0.2s;
+}
+
+.app-navbar-login {
+  background: transparent;
+  color: #fff;
+  border: 1px solid #fff;
+}
+
+.app-navbar-login:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.app-navbar-signup {
+  background: #fff;
+  color: #4f8cff;
+  border: none;
+}
+
+.app-navbar-signup:hover {
+  background: #e6f2ff;
+}
+
+/* Creative navbar overrides */
+.creative-navbar {
+  background: linear-gradient(90deg, #4f8cff 0%, #a1e3ff 100%) !important;
+}
+.creative-navbar-logo {
+  gap: 16px !important;
+}
+.creative-navbar-title {
+  color: #fff !important;
+  font-size: 1.5em !important;
+  font-weight: 700 !important;
+  text-shadow: 0 2px 8px #4f8cff22 !important;
+}
+.creative-navbar-actions {
+  margin-right: 32px !important;
+}
+.creative-navbar-logout {
+  background: #fff !important;
+  color: #4f8cff !important;
+  border: none !important;
+  border-radius: 8px !important;
+  padding: 8px 22px !important;
+  font-size: 1em !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  box-shadow: 0 2px 8px rgba(79,140,255,0.10) !important;
+  transition: background 0.2s, color 0.2s !important;
+}
+.creative-navbar-logout:hover {
+  background: #4f8cff !important;
+  color: #fff !important;
+}

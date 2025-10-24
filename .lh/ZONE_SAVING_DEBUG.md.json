@@ -1,0 +1,18 @@
+{
+    "sourceFile": "ZONE_SAVING_DEBUG.md",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1760438870861,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1760438870861,
+            "name": "Commit-0",
+            "content": "# 🐛 ZONE SAVING & MAP CODE ISSUES - DEBUGGING\r\n\r\n## Issues Reported:\r\n1. ❌ Zones disappear after drawing and saving\r\n2. ❌ Map code not shown in the new maps\r\n\r\n## Current State (from database check):\r\n- Map 13 \"edwef\" created with code `MAP-2BHE-OA65` has **0 zones**\r\n- Map 12 \"fff\" has 2 zones ✅\r\n- Map 10 \"map1\" has 8 zones ✅\r\n\r\n## Code Flow Analysis:\r\n\r\n### When User Draws a Zone:\r\n1. User draws polygon on WorldMap\r\n2. `WorldMap.handleZoneCreated()` is called\r\n3. Zone is passed to `CreateMapPage.handleZoneCreated()` via `onZoneCreated` prop\r\n4. Zone is added to `pendingZones` state array\r\n5. `hasUnsavedChanges` is set to true\r\n\r\n### When User Clicks \"Save Map\":\r\n1. `CreateMapPage.handleSave()` is called\r\n2. Map data is saved via `POST /api/map`\r\n3. Backend returns `{ success: true, map: { map_id: X, ...} }`\r\n4. `savePendingZones(map_id, customer_id)` is called\r\n5. For each zone in `pendingZones`:\r\n   - `POST /api/zone` with { map_id, customer_id, name, color, coordinates }\r\n   - Backend generates UUID and inserts to database\r\n6. Page redirects to dashboard after 2 seconds\r\n\r\n## Potential Problems:\r\n\r\n### Problem 1: Zones State Loss\r\n**Hypothesis:** `pendingZones` might be empty when `handleSave` is called\r\n**Possible Causes:**\r\n- State update timing (React batching)\r\n- Component re-render clearing state\r\n- Zone not being added to state properly\r\n\r\n**Solution:** Added logging to track:\r\n- When zones are added to pendingZones\r\n- Count of pendingZones at save time\r\n\r\n### Problem 2: Map Code Not Displayed\r\n**Status:** ✅ FIXED\r\nThe map code IS being displayed in the UI at lines 650-670 of CreateMapPage.tsx:\r\n```tsx\r\n{mapCode && (\r\n  <div style={{ ... }}>\r\n    <span>Map Code:</span>\r\n    <div>{mapCode}</div>\r\n  </div>\r\n)}\r\n```\r\n\r\n**Note:** Map code IS generated and displayed. User might be looking at dashboard where map codes are NOT shown in the table.\r\n\r\n## Dashboard Display Issue:\r\nLooking at the screenshot, the dashboard shows:\r\n- Map ID\r\n- Title  \r\n- Description\r\n- Zones count\r\n- Created At\r\n- Actions\r\n\r\n**Missing:** Map Code column!\r\n\r\n## Fixes Applied:\r\n\r\n### 1. Added Debug Logging to CreateMapPage.tsx ✅\r\n- Log pending zones when save is clicked\r\n- Log when zones are added to pendingZones\r\n- Log count after each zone addition\r\n\r\n### 2. Need to Add Map Code to Dashboard Table\r\nThe dashboard needs to show the map_code column!\r\n\r\n## Next Steps:\r\n1. ✅ Test zone creation with browser console open\r\n2. ✅ Check if pendingZones is populated\r\n3. ❌ Add map_code column to Dashboard table\r\n4. ❌ Test complete flow: Create map → Draw zones → Save → View in dashboard\r\n\r\n"
+        }
+    ]
+}

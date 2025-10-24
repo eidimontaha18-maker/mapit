@@ -1,0 +1,18 @@
+{
+    "sourceFile": "test-failing-endpoints.js",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1760956194238,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1760956194238,
+            "name": "Commit-0",
+            "content": "/**\r\n * Test the failing endpoints\r\n */\r\n\r\nimport fetch from 'node-fetch';\r\n\r\nconst API_BASE = 'http://127.0.0.1:3101';\r\n\r\nasync function testCustomerMaps() {\r\n  console.log('Testing GET /api/customer/20/maps...\\n');\r\n  \r\n  try {\r\n    const response = await fetch(`${API_BASE}/api/customer/20/maps`);\r\n    const text = await response.text();\r\n    \r\n    console.log('Status:', response.status);\r\n    console.log('Response text:', text);\r\n    \r\n    if (text) {\r\n      try {\r\n        const json = JSON.parse(text);\r\n        console.log('Response JSON:', JSON.stringify(json, null, 2));\r\n      } catch (e) {\r\n        console.log('Failed to parse JSON');\r\n      }\r\n    }\r\n  } catch (error) {\r\n    console.error('Error:', error.message);\r\n  }\r\n}\r\n\r\nasync function testCreateMap() {\r\n  console.log('\\n\\nTesting POST /api/map...\\n');\r\n  \r\n  const mapData = {\r\n    title: 'Test Map',\r\n    description: 'Test description',\r\n    customer_id: 20,\r\n    country: 'Lebanon',\r\n    active: true\r\n  };\r\n  \r\n  console.log('Sending data:', JSON.stringify(mapData, null, 2));\r\n  \r\n  try {\r\n    const response = await fetch(`${API_BASE}/api/map`, {\r\n      method: 'POST',\r\n      headers: {\r\n        'Content-Type': 'application/json'\r\n      },\r\n      body: JSON.stringify(mapData)\r\n    });\r\n    \r\n    const text = await response.text();\r\n    \r\n    console.log('Status:', response.status);\r\n    console.log('Response text:', text);\r\n    \r\n    if (text) {\r\n      try {\r\n        const json = JSON.parse(text);\r\n        console.log('Response JSON:', JSON.stringify(json, null, 2));\r\n      } catch (e) {\r\n        console.log('Failed to parse JSON');\r\n      }\r\n    }\r\n  } catch (error) {\r\n    console.error('Error:', error.message);\r\n  }\r\n}\r\n\r\nasync function run() {\r\n  await testCustomerMaps();\r\n  await testCreateMap();\r\n  \r\n  // Wait a bit for server logs to appear\r\n  await new Promise(resolve => setTimeout(resolve, 1000));\r\n  process.exit(0);\r\n}\r\n\r\nrun();\r\n"
+        }
+    ]
+}

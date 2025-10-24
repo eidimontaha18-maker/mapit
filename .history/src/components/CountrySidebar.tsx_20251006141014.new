@@ -1,0 +1,165 @@
+import React, { useState, useEffect } from 'react';
+import './CountrySidebar.css';
+import './MapCardStyles.css';
+import './MapFormStyles.css';
+import allCountries from '../assets/allCountries.json';
+import allCities from '../assets/allCities.json';
+import { COUNTRY_COORDINATES } from '../utils/countryCoordinates';
+
+// Props interface for the component
+interface CountrySidebarProps {
+  onSearch: (lat: number, lng: number, zoom: number, countryName?: string) => void;
+}
+
+const CountrySidebar: React.FC<CountrySidebarProps> = ({ onSearch }) => {
+  // State management
+  const [location, setLocation] = useState('');
+  const [selectedCountry, setSelectedCountry] = useState<string>('');
+  const [error, setError] = useState('');
+  const [countrySuggestions, setCountrySuggestions] = useState<string[]>([]);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const isLoggedIn = localStorage.getItem('mapit_logged_in') === 'true';
+
+  // Initialize map on component mount
+  useEffect(() => {
+    // Show world view
+    onSearch(20, 0, 2);
+  }, [onSearch]);
+
+  // Handle country selection
+  const handleCountrySelect = (countryName: string) => {
+    // Find corresponding coordinates
+    setSelectedCountry(countryName);
+    setCountrySuggestions([]);
+
+    const coordinates = COUNTRY_COORDINATES[countryName];
+    if (coordinates) {
+      const { lat, lng } = coordinates;
+      const zoom = 5; // Default zoom level for countries
+      
+      onSearch(lat, lng, zoom, countryName);
+      setLocation(countryName); // Update input field
+      setError('');
+    } else {
+      setError(`Could not find coordinates for ${countryName}`);
+    }
+  };
+
+  // Handle search submit
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const countryName = location.trim();
+    
+    if (countryName) {
+      // Find country coordinates
+      const coordinates = COUNTRY_COORDINATES[countryName];
+      
+      if (coordinates) {
+        const { lat, lng } = coordinates;
+        const zoom = 5; // Default zoom level
+        
+        onSearch(lat, lng, zoom, countryName);
+        setSelectedCountry(countryName);
+        setError('');
+      } else {
+        setError(`Could not find coordinates for "${countryName}". Try another location.`);
+      }
+    }
+  };
+
+  // Handle input changes for country search
+  const handleCountryInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target.value;
+    setLocation(input);
+    
+    if (input.length > 1) {
+      // Find matching countries
+      const matches = Object.keys(COUNTRY_COORDINATES)
+        .filter(country => country.toLowerCase().includes(input.toLowerCase()))
+        .slice(0, 5); // Limit to 5 suggestions
+      
+      setCountrySuggestions(matches);
+    } else {
+      setCountrySuggestions([]);
+    }
+  };
+
+  // Reset to world view
+  const handleWorldView = () => {
+    setSelectedCountry('');
+    setLocation('');
+    onSearch(20, 0, 2);
+  };
+
+  // Render component
+  return (
+    <div className={`country-sidebar ${isSidebarOpen ? 'open' : 'closed'}`}>
+      <button
+        className="sidebar-toggle-btn"
+        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        aria-label={isSidebarOpen ? 'Close sidebar' : 'Open sidebar'}
+      >
+        <span className="chevron-icon"></span>
+      </button>
+      
+      <div className="sidebar-header">
+        <h2>Location Search</h2>
+        <p>Search for countries, cities or coordinates</p>
+      </div>
+
+      <div className="sidebar-search">
+        <div className="search-row">
+          <form onSubmit={handleSearch}>
+            <input
+              type="text"
+              placeholder="Search for a country..."
+              value={location}
+              onChange={handleCountryInput}
+              className="search-input"
+              autoFocus
+            />
+            <button type="submit" className="search-button">Search</button>
+          </form>
+        </div>
+        
+        {error && <div className="error-message">{error}</div>}
+        
+        {countrySuggestions.length > 0 && (
+          <ul className="country-suggestions">
+            {countrySuggestions.map(country => (
+              <li 
+                key={country} 
+                onClick={() => handleCountrySelect(country)}
+                className={selectedCountry === country ? 'selected' : ''}
+              >
+                {country}
+              </li>
+            ))}
+          </ul>
+        )}
+        
+        <div className="common-countries">
+          <h3>Common Countries</h3>
+          <div className="country-buttons">
+            <button onClick={() => handleCountrySelect('United States')}>USA</button>
+            <button onClick={() => handleCountrySelect('United Kingdom')}>UK</button>
+            <button onClick={() => handleCountrySelect('Canada')}>Canada</button>
+            <button onClick={() => handleCountrySelect('Australia')}>Australia</button>
+            <button onClick={() => handleCountrySelect('Germany')}>Germany</button>
+            <button onClick={() => handleCountrySelect('Japan')}>Japan</button>
+            <button onClick={() => handleCountrySelect('Brazil')}>Brazil</button>
+            <button onClick={() => handleCountrySelect('India')}>India</button>
+          </div>
+          <button 
+            className="world-view-btn"
+            onClick={handleWorldView}
+          >
+            Show World View
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default CountrySidebar;

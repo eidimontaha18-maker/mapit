@@ -1,0 +1,18 @@
+{
+    "sourceFile": "test-api-quick.js",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1760955905960,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1760955905960,
+            "name": "Commit-0",
+            "content": "/**\r\n * Quick API Test\r\n * Tests the API endpoints to verify everything works\r\n */\r\n\r\nimport fetch from 'node-fetch';\r\n\r\nconst API_BASE = 'http://127.0.0.1:3101';\r\n\r\nconsole.log('🧪 Testing MapIt API...\\n');\r\n\r\nasync function testEndpoint(name, url) {\r\n  try {\r\n    const response = await fetch(url);\r\n    const data = await response.json();\r\n    console.log(`✅ ${name}`);\r\n    console.log(`   URL: ${url}`);\r\n    console.log(`   Status: ${response.status}`);\r\n    console.log(`   Response:`, JSON.stringify(data, null, 2));\r\n    console.log('');\r\n    return true;\r\n  } catch (error) {\r\n    console.log(`❌ ${name}`);\r\n    console.log(`   URL: ${url}`);\r\n    console.log(`   Error: ${error.message}`);\r\n    console.log('');\r\n    return false;\r\n  }\r\n}\r\n\r\nasync function runTests() {\r\n  console.log('=' .repeat(60));\r\n  console.log('Testing API Endpoints');\r\n  console.log('=' .repeat(60));\r\n  console.log('');\r\n  \r\n  const tests = [\r\n    ['Health Check', `${API_BASE}/api/health`],\r\n    ['Test Endpoint', `${API_BASE}/api/test`],\r\n    ['List Tables', `${API_BASE}/api/db/tables`],\r\n  ];\r\n  \r\n  let passed = 0;\r\n  let failed = 0;\r\n  \r\n  for (const [name, url] of tests) {\r\n    const result = await testEndpoint(name, url);\r\n    if (result) passed++;\r\n    else failed++;\r\n  }\r\n  \r\n  console.log('=' .repeat(60));\r\n  console.log(`Results: ${passed} passed, ${failed} failed`);\r\n  console.log('=' .repeat(60));\r\n  \r\n  if (failed === 0) {\r\n    console.log('\\n🎉 All tests passed! Your API is working perfectly!');\r\n  } else {\r\n    console.log('\\n⚠️  Some tests failed. Make sure the server is running:');\r\n    console.log('   npm run server');\r\n  }\r\n}\r\n\r\nrunTests().catch(console.error);\r\n"
+        }
+    ]
+}

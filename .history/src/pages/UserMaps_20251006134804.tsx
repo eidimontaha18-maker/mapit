@@ -1,0 +1,129 @@
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import './UserMaps.css';
+
+interface Map {
+  map_id: number;
+  title: string;
+  description: string;
+  created_at: string;
+  map_data: {
+    lat: number;
+    lng: number;
+    zoom: number;
+  };
+  map_bounds: {
+    center: [number, number];
+    zoom: number;
+  };
+  active: boolean;
+  country: string | null;
+  map_codes: string[];
+}
+
+const UserMaps: React.FC = () => {
+  const [maps, setMaps] = useState<Map[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchMaps = async () => {
+      try {
+        const response = await fetch('/api/tables/map?orderBy=created_at DESC');
+        const data = await response.json();
+        
+        if (data.success) {
+          setMaps(data.records);
+        } else {
+          setError('Failed to fetch maps: ' + data.error);
+        }
+      } catch (err) {
+        setError('Error connecting to server');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchMaps();
+  }, []);
+  
+  // State for map code input
+  const [mapCode, setMapCode] = useState('');
+  
+  // Function to navigate to a map by code
+  const handleMapCodeSearch = () => {
+    if (!mapCode.trim()) {
+      setError('Please enter a map code');
+      return;
+    }
+    
+    // Find the map with the given code
+    const foundMap = maps.find(map => 
+      map.map_codes && map.map_codes.includes(mapCode.trim().toUpperCase())
+    );
+    
+    if (foundMap) {
+      window.location.href = `/view-map/${foundMap.map_id}`;
+    } else {
+      setError('Map not found with the given code');
+    }
+  };
+
+  return (
+    <div className="user-maps-container">
+      <div className="maps-header">
+        <h1>My Maps</h1>
+        <Link to="/create-map" className="create-map-button">Create New Map</Link>
+      </div>
+      
+      <div className="map-code-search">
+        <h3>Open Map by Code</h3>
+        <div className="search-container">
+          <input
+            type="text"
+            value={mapCode}
+            onChange={(e) => setMapCode(e.target.value)}
+            placeholder="Enter map code (e.g., MAP-ABCD-1234)"
+            className="map-code-input"
+          />
+          <button onClick={handleMapCodeSearch} className="map-code-button">
+            Open Map
+          </button>
+        </div>
+        {error && <div className="error-message">{error}</div>}
+      </div>
+
+      {loading ? (
+        <div className="loading-indicator">Loading your maps...</div>
+      ) : error ? (
+        <div className="error-message">{error}</div>
+      ) : (
+        <div className="maps-grid">
+          {maps.length === 0 ? (
+            <div className="no-maps-message">
+              <p>You haven't created any maps yet.</p>
+              <Link to="/create-map" className="create-first-map">Create your first map</Link>
+            </div>
+          ) : (
+            maps.map(map => (
+              <div key={map.id} className="map-card">
+                <h3>{map.title}</h3>
+                <p className="map-description">{map.description}</p>
+                <div className="map-footer">
+                  <span className="map-date">Created: {map.createdAt}</span>
+                  <div className="map-actions">
+                    <Link to={`/view-map/${map.id}`} className="view-map-button">View</Link>
+                    <Link to={`/edit-map/${map.id}`} className="edit-map-button">Edit</Link>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default UserMaps;

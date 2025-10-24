@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Country & City Search</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f8fa;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .search-header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #2c3e50;
+        }
+        .search-header img {
+            width: 40px;
+            height: 40px;
+            vertical-align: middle;
+            margin-right: 10px;
+        }
+        .search-header h1 {
+            display: inline-block;
+            vertical-align: middle;
+            margin: 0;
+        }
+        .search-box {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #34495e;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        select {
+            background-color: white;
+        }
+        .button-group {
+            text-align: right;
+        }
+        button {
+            background-color: #2c3e50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #1a2530;
+        }
+        #map {
+            height: 400px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #7f8c8d;
+        }
+        .error {
+            color: #e74c3c;
+            margin-top: 5px;
+            font-size: 14px;
+        }
+        .hidden {
+            display: none;
+        }
+        .city-info {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            border-left: 4px solid #3498db;
+        }
+        .coordinates {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="search-header">
+            <img src="./src/assets/mapit-logo.svg" alt="MapIt Logo">
+            <h1>Country & City Search</h1>
+        </div>
+        
+        <div class="search-box">
+            <div class="form-group">
+                <label for="countryInput">Enter a Country:</label>
+                <input type="text" id="countryInput" placeholder="e.g. Lebanon, France, Japan..." autocomplete="off">
+                <div id="countryError" class="error hidden">Please enter a valid country name</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="citySelect">Select a City:</label>
+                <select id="citySelect" disabled>
+                    <option value="">First select a country above</option>
+                </select>
+            </div>
+            
+            <div class="button-group">
+                <button id="searchBtn">Search Location</button>
+            </div>
+        </div>
+        
+        <div id="map"></div>
+        
+        <div id="cityInfo" class="city-info hidden">
+            <h3 id="selectedLocation">Location Information</h3>
+            <p id="coordinates" class="coordinates"></p>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Initialize map
+        const map = L.map('map').setView([20, 0], 2);
+
+        // Add English-only tile layer
+        L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png', {
+            maxZoom: 20,
+            attribution: '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // DOM elements
+        const countryInput = document.getElementById('countryInput');
+        const citySelect = document.getElementById('citySelect');
+        const searchBtn = document.getElementById('searchBtn');
+        const countryError = document.getElementById('countryError');
+        const cityInfo = document.getElementById('cityInfo');
+        const selectedLocation = document.getElementById('selectedLocation');
+        const coordinates = document.getElementById('coordinates');
+
+        // Global variables
+        let countriesData = {};
+        let citiesData = {};
+        let currentMarker = null;
+
+        // Load countries data
+        async function loadCountriesData() {
+            try {
+                const response = await fetch('/src/assets/allCountries.json');
+                countriesData = await response.json();
+                console.log('Countries data loaded successfully');
+            } catch (error) {
+                console.error('Error loading countries data:', error);
+            }
+        }
+
+        // Load cities data
+        async function loadCitiesData() {
+            try {
+                const response = await fetch('/src/assets/allCities.json');
+                citiesData = await response.json();
+                console.log('Cities data loaded successfully');
+            } catch (error) {
+                console.error('Error loading cities data:', error);
+            }
+        }
+
+        // Get cities for a specific country - using a mapping approach since our data doesn't have country property
+        function getCitiesForCountry(country) {
+            const normalizedCountry = country.trim().toLowerCase();
+            
+            // Check if cities data is available
+            if (!citiesData || Object.keys(citiesData).length === 0) {
+                console.error('Cities data not loaded yet');
+                return [];
+            }
+            
+            // Map of countries to their major cities
+            // This is a simplified mapping for demonstration
+            const countryToCities = {
+                'united states': ['New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix'],
+                'united kingdom': ['London', 'Manchester', 'Birmingham', 'Liverpool', 'Glasgow'],
+                'france': ['Paris', 'Marseille', 'Lyon', 'Toulouse', 'Nice'],
+                'germany': ['Berlin', 'Hamburg', 'Munich', 'Cologne', 'Frankfurt'],
+                'japan': ['Tokyo', 'Osaka', 'Kyoto', 'Yokohama', 'Sapporo'],
+                'china': ['Beijing', 'Shanghai', 'Guangzhou', 'Shenzhen', 'Hong Kong'],
+                'india': ['Delhi', 'Mumbai', 'Bangalore', 'Chennai', 'Kolkata'],
+                'australia': ['Sydney', 'Melbourne', 'Brisbane', 'Perth', 'Adelaide'],
+                'brazil': ['São Paulo', 'Rio de Janeiro', 'Brasília', 'Salvador', 'Fortaleza'],
+                'canada': ['Toronto', 'Vancouver', 'Montreal', 'Calgary', 'Ottawa'],
+                'russia': ['Moscow', 'Saint Petersburg', 'Novosibirsk', 'Yekaterinburg', 'Kazan'],
+                'italy': ['Rome', 'Milan', 'Naples', 'Turin', 'Florence'],
+                'spain': ['Madrid', 'Barcelona', 'Valencia', 'Seville', 'Zaragoza'],
+                'mexico': ['Mexico City', 'Guadalajara', 'Monterrey', 'Puebla', 'Tijuana'],
+                'egypt': ['Cairo', 'Alexandria', 'Giza', 'Shubra El-Kheima', 'Port Said']
+            };
+            
+            // Find cities for this country
+            const cities = [];
+            const citiesForCountry = countryToCities[normalizedCountry] || [];
+            
+            for (const cityName of citiesForCountry) {
+                if (citiesData[cityName]) {
+                    cities.push({
+                        name: cityName,
+                        lat: citiesData[cityName].lat,
+                        lng: citiesData[cityName].lng
+                    });
+                }
+            }
+            
+            return cities.sort((a, b) => a.name.localeCompare(b.name));
+        }
+
+        // Populate city dropdown for a country
+        function populateCityDropdown(country) {
+            const cities = getCitiesForCountry(country);
+            
+            // Clear previous options
+            citySelect.innerHTML = '';
+            
+            // Add default option
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = cities.length > 0 
+                ? `Select a city in ${country}` 
+                : `No cities found for ${country}`;
+            citySelect.appendChild(defaultOption);
+            
+            // Add city options
+            cities.forEach(city => {
+                const option = document.createElement('option');
+                option.value = JSON.stringify({ name: city.name, lat: city.lat, lng: city.lng });
+                option.textContent = city.name;
+                citySelect.appendChild(option);
+            });
+            
+            // Enable/disable the dropdown based on available cities
+            citySelect.disabled = cities.length === 0;
+        }
+
+        // Check if country exists in our data
+        function countryExists(countryName) {
+            const normalizedInput = countryName.trim().toLowerCase();
+            
+            // Check if countries data is loaded
+            if (!countriesData || Object.keys(countriesData).length === 0) {
+                console.error('Countries data not loaded yet');
+                return false;
+            }
+            
+            // Normalize country names for case-insensitive comparison
+            const normalizedCountries = Object.keys(countriesData).map(c => c.toLowerCase());
+            
+            return normalizedCountries.includes(normalizedInput);
+        }
+
+        // Get country coordinates
+        function getCountryCoordinates(countryName) {
+            // Normalize input for case-insensitive comparison
+            const normalizedInput = countryName.trim().toLowerCase();
+            
+            // Find the actual country name with proper case
+            const actualCountryName = Object.keys(countriesData).find(
+                c => c.toLowerCase() === normalizedInput
+            );
+            
+            if (actualCountryName) {
+                return {
+                    name: actualCountryName,
+                    lat: countriesData[actualCountryName].lat,
+                    lng: countriesData[actualCountryName].lng
+                };
+            }
+            
+            return null;
+        }
+
+        // Show location on map
+        function showLocationOnMap(name, lat, lng, zoom = 6) {
+            // Remove previous marker if exists
+            if (currentMarker) {
+                map.removeLayer(currentMarker);
+            }
+            
+            // Set map view to the location
+            map.setView([lat, lng], zoom);
+            
+            // Add a marker
+            currentMarker = L.marker([lat, lng]).addTo(map)
+                .bindPopup(`<b>${name}</b>`)
+                .openPopup();
+            
+            // Update location info
+            selectedLocation.textContent = name;
+            coordinates.textContent = `Latitude: ${lat.toFixed(4)}, Longitude: ${lng.toFixed(4)}`;
+            cityInfo.classList.remove('hidden');
+        }
+
+        // Handle country input change
+        countryInput.addEventListener('input', function() {
+            countryError.classList.add('hidden');
+        });
+
+        // Handle form submission
+        searchBtn.addEventListener('click', function() {
+            const country = countryInput.value.trim();
+            
+            // Check if country exists
+            if (!country || !countryExists(country)) {
+                countryError.classList.remove('hidden');
+                citySelect.disabled = true;
+                citySelect.innerHTML = '<option value="">First select a valid country</option>';
+                return;
+            }
+            
+            // Get proper country name and coordinates
+            const countryData = getCountryCoordinates(country);
+            
+            if (countryData) {
+                // Update country input with proper case
+                countryInput.value = countryData.name;
+                
+                // Populate city dropdown
+                populateCityDropdown(countryData.name);
+                
+                // Show country on map
+                showLocationOnMap(countryData.name, countryData.lat, countryData.lng, 5);
+            }
+        });
+
+        // Handle city selection
+        citySelect.addEventListener('change', function() {
+            const selectedValue = this.value;
+            
+            if (selectedValue) {
+                try {
+                    const cityData = JSON.parse(selectedValue);
+                    showLocationOnMap(cityData.name, cityData.lat, cityData.lng, 10);
+                } catch (error) {
+                    console.error('Error parsing city data:', error);
+                }
+            }
+        });
+
+        // Load data on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                await Promise.all([
+                    loadCountriesData(),
+                    loadCitiesData()
+                ]);
+                console.log('Data loaded successfully. The application is ready.');
+            } catch (error) {
+                console.error('Failed to load data:', error);
+                alert('Failed to load geographic data. Please refresh the page or try again later.');
+            }
+        });
+    </script>
+</body>
+</html>

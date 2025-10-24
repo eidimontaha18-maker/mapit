@@ -1,0 +1,18 @@
+{
+    "sourceFile": "test-zone-creation.cjs",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1760438870784,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1760438870784,
+            "name": "Commit-0",
+            "content": "const { Pool } = require('pg');\r\n\r\nconst pool = new Pool({\r\n  user: 'postgres',\r\n  host: 'localhost',\r\n  database: 'mapit',\r\n  password: 'NewStrongPass123',\r\n  port: 5432,\r\n});\r\n\r\nasync function testZoneCreation() {\r\n  console.log('\\n🔍 Testing Zone Creation Flow...\\n');\r\n  \r\n  try {\r\n    // 1. Check customer 18's maps\r\n    const mapsResult = await pool.query(\r\n      'SELECT map_id, title, map_code, created_at FROM map WHERE customer_id = 18 ORDER BY created_at DESC LIMIT 5'\r\n    );\r\n    \r\n    console.log('📍 Customer 18 Maps:');\r\n    mapsResult.rows.forEach(map => {\r\n      console.log(`  - Map ${map.map_id}: \"${map.title}\" (${map.map_code}) - Created: ${map.created_at}`);\r\n    });\r\n    \r\n    // 2. Check zones for each map\r\n    console.log('\\n📦 Zones per Map:');\r\n    for (const map of mapsResult.rows) {\r\n      const zonesResult = await pool.query(\r\n        'SELECT id, name, color, map_id, customer_id, created_at FROM zones WHERE map_id = $1 ORDER BY created_at DESC',\r\n        [map.map_id]\r\n      );\r\n      console.log(`  - Map ${map.map_id} (${map.title}): ${zonesResult.rows.length} zones`);\r\n      zonesResult.rows.forEach(zone => {\r\n        console.log(`    • Zone \"${zone.name}\" (${zone.color}) - customer_id: ${zone.customer_id} - Created: ${zone.created_at}`);\r\n      });\r\n    }\r\n    \r\n    // 3. Check for zones without customer_id\r\n    const orphanZones = await pool.query(\r\n      'SELECT id, name, map_id, customer_id FROM zones WHERE customer_id IS NULL'\r\n    );\r\n    \r\n    if (orphanZones.rows.length > 0) {\r\n      console.log('\\n⚠️  Zones without customer_id:');\r\n      orphanZones.rows.forEach(zone => {\r\n        console.log(`  - Zone \"${zone.name}\" in map ${zone.map_id}`);\r\n      });\r\n    } else {\r\n      console.log('\\n✅ All zones have customer_id assigned');\r\n    }\r\n    \r\n    // 4. Check zones table structure\r\n    const tableInfo = await pool.query(`\r\n      SELECT column_name, data_type, is_nullable, column_default\r\n      FROM information_schema.columns \r\n      WHERE table_name = 'zones'\r\n      ORDER BY ordinal_position\r\n    `);\r\n    \r\n    console.log('\\n📋 Zones Table Structure:');\r\n    tableInfo.rows.forEach(col => {\r\n      console.log(`  - ${col.column_name}: ${col.data_type} ${col.is_nullable === 'NO' ? 'NOT NULL' : ''} ${col.column_default ? `DEFAULT ${col.column_default}` : ''}`);\r\n    });\r\n    \r\n  } catch (error) {\r\n    console.error('❌ Error:', error.message);\r\n  } finally {\r\n    await pool.end();\r\n  }\r\n}\r\n\r\ntestZoneCreation();\r\n"
+        }
+    ]
+}

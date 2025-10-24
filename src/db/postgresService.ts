@@ -1,0 +1,1 @@
+// This file should not be used in the frontend. Remove all Node.js database code.

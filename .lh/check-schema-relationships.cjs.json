@@ -1,0 +1,18 @@
+{
+    "sourceFile": "check-schema-relationships.cjs",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1760437154817,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1760437154817,
+            "name": "Commit-0",
+            "content": "// Check database schema relationships\r\nconst { Pool } = require('pg');\r\n\r\nconst pool = new Pool({\r\n  user: 'postgres',\r\n  host: 'localhost',\r\n  database: 'mapit',\r\n  password: 'NewStrongPass123',\r\n  port: 5432,\r\n});\r\n\r\nasync function checkSchema() {\r\n  try {\r\n    console.log('\\n=== MAP TABLE STRUCTURE ===');\r\n    const mapStructure = await pool.query(`\r\n      SELECT column_name, data_type, is_nullable\r\n      FROM information_schema.columns\r\n      WHERE table_name = 'map'\r\n      ORDER BY ordinal_position;\r\n    `);\r\n    mapStructure.rows.forEach(row => {\r\n      console.log(`${row.column_name}: ${row.data_type} (${row.is_nullable === 'YES' ? 'NULL' : 'NOT NULL'})`);\r\n    });\r\n    \r\n    console.log('\\n=== CUSTOMER_MAP TABLE STRUCTURE ===');\r\n    const customerMapStructure = await pool.query(`\r\n      SELECT column_name, data_type, is_nullable\r\n      FROM information_schema.columns\r\n      WHERE table_name = 'customer_map'\r\n      ORDER BY ordinal_position;\r\n    `);\r\n    customerMapStructure.rows.forEach(row => {\r\n      console.log(`${row.column_name}: ${row.data_type} (${row.is_nullable === 'YES' ? 'NULL' : 'NOT NULL'})`);\r\n    });\r\n    \r\n    console.log('\\n=== ZONES TABLE STRUCTURE ===');\r\n    const zonesStructure = await pool.query(`\r\n      SELECT column_name, data_type, is_nullable\r\n      FROM information_schema.columns\r\n      WHERE table_name = 'zones'\r\n      ORDER BY ordinal_position;\r\n    `);\r\n    zonesStructure.rows.forEach(row => {\r\n      console.log(`${row.column_name}: ${row.data_type} (${row.is_nullable === 'YES' ? 'NULL' : 'NOT NULL'})`);\r\n    });\r\n    \r\n    console.log('\\n=== SAMPLE DATA ===');\r\n    \r\n    // Get sample customer_map relationships\r\n    const customerMaps = await pool.query(`\r\n      SELECT cm.customer_id, c.email, cm.map_id, m.title\r\n      FROM customer_map cm\r\n      JOIN customer c ON cm.customer_id = c.customer_id\r\n      JOIN map m ON cm.map_id = m.map_id\r\n      LIMIT 10;\r\n    `);\r\n    console.log('\\nCustomer-Map Relationships:');\r\n    customerMaps.rows.forEach(row => {\r\n      console.log(`  Customer ${row.customer_id} (${row.email}) -> Map ${row.map_id} (${row.title})`);\r\n    });\r\n    \r\n    // Count zones per map\r\n    const zonesCounts = await pool.query(`\r\n      SELECT m.map_id, m.title, COUNT(z.zone_id) as zone_count\r\n      FROM map m\r\n      LEFT JOIN zones z ON m.map_id = z.map_id\r\n      GROUP BY m.map_id, m.title\r\n      ORDER BY m.map_id\r\n      LIMIT 10;\r\n    `);\r\n    console.log('\\nZones per Map:');\r\n    zonesCounts.rows.forEach(row => {\r\n      console.log(`  Map ${row.map_id} (${row.title}): ${row.zone_count} zones`);\r\n    });\r\n    \r\n  } catch (error) {\r\n    console.error('Error:', error.message);\r\n  } finally {\r\n    await pool.end();\r\n  }\r\n}\r\n\r\ncheckSchema();\r\n"
+        }
+    ]
+}

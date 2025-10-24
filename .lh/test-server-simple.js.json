@@ -1,0 +1,18 @@
+{
+    "sourceFile": "test-server-simple.js",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1760435550226,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1760435550226,
+            "name": "Commit-0",
+            "content": "// Quick server test\r\nimport express from 'express';\r\nimport cors from 'cors';\r\nimport pg from 'pg';\r\n\r\nconst { Pool } = pg;\r\nconst app = express();\r\nconst PORT = 3101;\r\n\r\napp.use(cors({origin: '*'}));\r\napp.use(express.json());\r\n\r\nconst pool = new Pool({\r\n  connectionString: 'postgres://postgres:NewStrongPass123@localhost:5432/mapit'\r\n});\r\n\r\napp.get('/api/test', (req, res) => {\r\n  res.json({ success: true, message: 'Server is working!' });\r\n});\r\n\r\napp.get('/api/db/tables/map', async (req, res) => {\r\n  try {\r\n    const customer_id = req.query.customer_id;\r\n    console.log('Fetching maps for customer:', customer_id);\r\n    \r\n    if (!customer_id) {\r\n      return res.json({ success: true, records: [] });\r\n    }\r\n    \r\n    const result = await pool.query(\r\n      'SELECT * FROM map WHERE customer_id = $1 ORDER BY created_at DESC',\r\n      [customer_id]\r\n    );\r\n    \r\n    console.log('Found maps:', result.rows.length);\r\n    res.json({ success: true, records: result.rows });\r\n  } catch (error) {\r\n    console.error('Error:', error);\r\n    res.status(500).json({ success: false, error: error.message });\r\n  }\r\n});\r\n\r\napp.post('/api/login', async (req, res) => {\r\n  try {\r\n    const { email, password } = req.body;\r\n    console.log('Login attempt:', email);\r\n    \r\n    if (!email || !password) {\r\n      return res.status(400).json({ success: false, error: 'Email and password required' });\r\n    }\r\n    \r\n    const result = await pool.query(\r\n      'SELECT customer_id, email, first_name, last_name FROM customer WHERE email = $1 LIMIT 1',\r\n      [email.toLowerCase()]\r\n    );\r\n    \r\n    if (result.rows.length === 0) {\r\n      return res.status(401).json({ success: false, error: 'Invalid credentials' });\r\n    }\r\n    \r\n    const user = result.rows[0];\r\n    res.json({\r\n      success: true,\r\n      user: {\r\n        customer_id: user.customer_id,\r\n        email: user.email,\r\n        first_name: user.first_name,\r\n        last_name: user.last_name\r\n      }\r\n    });\r\n  } catch (error) {\r\n    console.error('Login error:', error);\r\n    res.status(500).json({ success: false, error: error.message });\r\n  }\r\n});\r\n\r\napp.listen(PORT, '127.0.0.1', () => {\r\n  console.log(`✅ Test server running on http://127.0.0.1:${PORT}`);\r\n  console.log(`📱 Access at http://localhost:${PORT}`);\r\n});\r\n"
+        }
+    ]
+}

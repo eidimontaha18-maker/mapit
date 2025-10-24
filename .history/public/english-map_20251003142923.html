@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MapIt - Location Search</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --primary-dark: #2980b9;
+            --secondary-color: #2ecc71;
+            --accent-color: #f39c12;
+            --bg-light: #f9f9f9;
+            --bg-dark: #2c3e50;
+            --text-light: #ecf0f1;
+            --text-dark: #34495e;
+            --shadow-light: 0 4px 12px rgba(0,0,0,0.1);
+            --shadow-medium: 0 6px 16px rgba(0,0,0,0.15);
+            --radius-sm: 5px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --transition-fast: 0.2s ease;
+            --transition-normal: 0.3s ease;
+            --nav-height: 64px;
+            --sidebar-width: 320px;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            color: var(--text-dark);
+            background-color: var(--bg-light);
+            overflow: hidden;
+        }
+        
+        /* App Layout - No Navigation Bar */
+        
+        /* Main Content */
+        .main-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        /* Map */
+        #map {
+            flex: 1;
+            height: calc(100vh - var(--nav-height));
+            z-index: 1;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: white;
+            padding: 24px;
+            box-shadow: var(--shadow-medium);
+            overflow-y: auto;
+            z-index: 1000;
+            height: calc(100vh - var(--nav-height));
+            transition: transform var(--transition-normal);
+            position: relative;
+        }
+        
+        .sidebar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 3px;
+            height: 100%;
+            background: linear-gradient(180deg, var(--primary-color), var(--secondary-color));
+        }
+        /* Search Section */
+        .search-header {
+            margin-bottom: 24px;
+            position: relative;
+        }
+        
+        .search-header h1 {
+            margin: 0 0 8px 0;
+            font-size: 26px;
+            color: var(--text-dark);
+            font-weight: 600;
+        }
+        
+        .search-header p {
+            margin: 0;
+            color: #666;
+            font-size: 15px;
+            line-height: 1.4;
+        }
+        
+        .search-header::after {
+            content: '';
+            display: block;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            margin-top: 12px;
+            border-radius: 2px;
+        }
+        
+        /* Search Box */
+        .search-box {
+            background-color: white;
+            border-radius: var(--radius-md);
+            padding: 18px;
+            box-shadow: var(--shadow-light);
+            margin-bottom: 24px;
+            position: relative;
+            border: 1px solid rgba(0,0,0,0.05);
+            transition: box-shadow var(--transition-normal), transform var(--transition-normal);
+        }
+        
+        .search-box:focus-within {
+            box-shadow: var(--shadow-medium);
+            transform: translateY(-2px);
+        }
+        
+        .search-input-wrapper {
+            position: relative;
+        }
+        
+        #countryInput {
+            width: 100%;
+            padding: 12px 12px 12px 40px;
+            border: 1.5px solid #e0e0e0;
+            border-radius: var(--radius-sm);
+            font-size: 16px;
+            font-family: inherit;
+            transition: all var(--transition-normal);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.03);
+        }
+        
+        #countryInput:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.15);
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+            font-size: 16px;
+        }
+        
+        .error {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-top: 10px;
+            display: none;
+            padding-left: 4px;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        /* Country Suggestions */
+        .country-suggestions {
+            list-style: none;
+            margin: 8px 0 0;
+            padding: 6px;
+            background: white;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-medium);
+            max-height: 250px;
+            overflow-y: auto;
+            transition: all var(--transition-normal);
+            position: relative;
+            z-index: 10;
+            scrollbar-width: thin;
+            scrollbar-color: #ddd #f9f9f9;
+        }
+        
+        .country-suggestions li {
+            padding: 10px 14px;
+            cursor: pointer;
+            border-radius: var(--radius-sm);
+            margin-bottom: 2px;
+            transition: all var(--transition-fast);
+            display: flex;
+            align-items: center;
+        }
+        
+        .country-suggestions li:hover {
+            background-color: #f0f7ff;
+            transform: translateX(3px);
+        }
+        
+        .country-suggestions li::before {
+            content: '🌍';
+            margin-right: 10px;
+            font-size: 16px;
+        }
+        
+        /* Location Info */
+        .location-info {
+            background-color: white;
+            border-radius: var(--radius-md);
+            padding: 20px;
+            margin-top: 20px;
+            border-left: 4px solid var(--primary-color);
+            box-shadow: var(--shadow-light);
+            transition: all var(--transition-normal);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .location-info:hover {
+            box-shadow: var(--shadow-medium);
+        }
+        
+        .location-info::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, rgba(52, 152, 219, 0.1) 0%, rgba(255,255,255,0) 70%);
+            z-index: 0;
+        }
+        
+        .location-info h3 {
+            margin-top: 0;
+            color: var(--text-dark);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .location-info h3::before {
+            content: '📍';
+            font-size: 20px;
+        }
+        
+        .coordinates {
+            color: #666;
+            font-size: 14px;
+            margin: 8px 0 0;
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .coordinates::before {
+            content: '🧭';
+            font-size: 14px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        /* Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            :root {
+                --sidebar-width: 280px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 0 16px;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+            
+            .hamburger-menu {
+                display: block;
+            }
+            
+            .sidebar {
+                position: absolute;
+                transform: translateX(-100%);
+                transition: transform 0.4s ease;
+                box-shadow: var(--shadow-medium);
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .sidebar-toggle {
+                position: absolute;
+                top: 20px;
+                right: -40px;
+                width: 40px;
+                height: 40px;
+                background: var(--primary-color);
+                color: white;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+                box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+                z-index: 1000;
+            }
+            
+            .logo h1 {
+                font-size: 20px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .navbar {
+                height: 56px;
+            }
+            
+            :root {
+                --nav-height: 56px;
+                --sidebar-width: 100%;
+            }
+            
+            .logo img {
+                width: 32px;
+                height: 32px;
+            }
+            
+            .search-box {
+                padding: 15px;
+            }
+            
+            .location-info {
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <div class="navbar">
+        <div class="logo">
+            <img src="/src/assets/mapit-logo.svg" alt="MapIt Logo">
+            <h1>MapIt</h1>
+        </div>
+        <div class="nav-links">
+            <a href="english-map.html" class="active"><i class="fas fa-map-marked-alt"></i> Map</a>
+            <a href="countries-english.html"><i class="fas fa-globe"></i> Countries</a>
+            <a href="db-manager.html"><i class="fas fa-database"></i> Database</a>
+        </div>
+        <div class="hamburger-menu">
+            <i class="fas fa-bars"></i>
+        </div>
+        <button class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    </div>
+
+    <!-- Main Content with Map and Sidebar -->
+    <div class="main-content">
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-toggle" id="sidebarToggle">
+                <i class="fas fa-chevron-right"></i>
+            </div>
+            
+            <div class="search-header">
+                <h1>Location Search</h1>
+                <p>Find any country and zoom to its location on the interactive map</p>
+            </div>
+            
+            <div class="search-box">
+                <div class="search-input-wrapper">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" id="countryInput" placeholder="Type a country name..." autocomplete="off">
+                </div>
+                <div id="countryError" class="error"><i class="fas fa-exclamation-circle"></i> Country not found</div>
+            </div>
+            
+            <ul id="countrySuggestions" class="country-suggestions hidden"></ul>
+            
+            <div id="locationInfo" class="location-info hidden">
+                <h3 id="selectedCountry">Country Information</h3>
+                <p id="coordinates" class="coordinates"></p>
+            </div>
+        </div>
+        
+        <div id="map"></div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Initialize map centered on the world view
+        const map = L.map('map').setView([20, 0], 2);
+
+        // Add English-only tile layer with enhanced styling
+        L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png', {
+            maxZoom: 20,
+            attribution: '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // DOM Elements
+        const countryInput = document.getElementById('countryInput');
+        const countrySuggestions = document.getElementById('countrySuggestions');
+        const countryError = document.getElementById('countryError');
+        const locationInfo = document.getElementById('locationInfo');
+        const selectedCountry = document.getElementById('selectedCountry');
+        const coordinates = document.getElementById('coordinates');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const hamburgerMenu = document.querySelector('.hamburger-menu');
+
+        // Global variables
+        let countriesData = {};
+        let currentMarker = null;
+        let debounceTimeout = null;
+        const DEBOUNCE_DELAY = 300; // ms
+        let isSidebarVisible = true;
+
+        // Custom marker icon
+        const customIcon = L.icon({
+            iconUrl: 'https://cdn.jsdelivr.net/gh/pointhi/leaflet-color-markers@master/img/marker-icon-2x-red.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        });
+
+        // Load countries data
+        async function loadCountriesData() {
+            try {
+                const response = await fetch('/src/assets/allCountries.json');
+                countriesData = await response.json();
+                console.log('Countries data loaded successfully');
+            } catch (error) {
+                console.error('Error loading countries data:', error);
+            }
+        }
+
+        // Show location on map with enhanced animations
+        function showLocationOnMap(name, lat, lng, zoom = 5) {
+            // Remove previous marker if exists
+            if (currentMarker) {
+                map.removeLayer(currentMarker);
+            }
+            
+            // Set map view to the location with smooth animation
+            map.flyTo([lat, lng], zoom, {
+                animate: true,
+                duration: 1.5, // seconds for smoother animation
+                easeLinearity: 0.25
+            });
+            
+            // Add a marker with custom icon and bounce animation
+            currentMarker = L.marker([lat, lng], { icon: customIcon }).addTo(map)
+                .bindPopup(`<b>${name}</b>`, { className: 'custom-popup' })
+                .openPopup();
+            
+            // Add bounce effect (simulate with CSS animation)
+            const markerElement = currentMarker._icon;
+            if (markerElement) {
+                markerElement.style.transition = '0.3s transform';
+                markerElement.style.transform = 'translateY(-10px)';
+                setTimeout(() => {
+                    markerElement.style.transform = 'translateY(0)';
+                }, 300);
+            }
+            
+            // Update location info with enhanced display
+            selectedCountry.textContent = name;
+            coordinates.textContent = `Latitude: ${lat.toFixed(4)}, Longitude: ${lng.toFixed(4)}`;
+            locationInfo.classList.remove('hidden');
+            locationInfo.style.animation = 'fadeIn 0.5s ease';
+            
+            // On mobile, close sidebar after selection
+            if (window.innerWidth <= 768) {
+                toggleSidebar(false);
+            }
+        }
+
+        // Check if country exists in our data
+        function countryExists(countryName) {
+            const normalizedInput = countryName.trim().toLowerCase();
+            
+            // Check if countries data is loaded
+            if (!countriesData || Object.keys(countriesData).length === 0) {
+                console.error('Countries data not loaded yet');
+                return false;
+            }
+            
+            // Normalize country names for case-insensitive comparison
+            const normalizedCountries = Object.keys(countriesData).map(c => c.toLowerCase());
+            
+            return normalizedCountries.includes(normalizedInput);
+        }
+
+        // Get country coordinates
+        function getCountryCoordinates(countryName) {
+            // Normalize input for case-insensitive comparison
+            const normalizedInput = countryName.trim().toLowerCase();
+            
+            // Find the actual country name with proper case
+            const actualCountryName = Object.keys(countriesData).find(
+                c => c.toLowerCase() === normalizedInput
+            );
+            
+            if (actualCountryName) {
+                return {
+                    name: actualCountryName,
+                    lat: countriesData[actualCountryName].lat,
+                    lng: countriesData[actualCountryName].lng
+                };
+            }
+            
+            return null;
+        }
+
+        // Handle country input for autocomplete with enhanced filtering
+        function handleCountryInput() {
+            const input = countryInput.value.trim().toLowerCase();
+            
+            if (!input || input.length < 2) {
+                countrySuggestions.classList.add('hidden');
+                countrySuggestions.innerHTML = '';
+                return;
+            }
+            
+            // Search for matching countries with prioritized exact matches
+            const exactStartMatches = Object.keys(countriesData)
+                .filter(country => country.toLowerCase().startsWith(input));
+                
+            const containsMatches = Object.keys(countriesData)
+                .filter(country => country.toLowerCase().includes(input) && !country.toLowerCase().startsWith(input));
+                
+            // Combine results with priority
+            const matches = [...exactStartMatches, ...containsMatches].slice(0, 5);
+            
+            // Display matches
+            if (matches.length > 0) {
+                countrySuggestions.innerHTML = '';
+                
+                matches.forEach(match => {
+                    const li = document.createElement('li');
+                    li.textContent = match;
+                    li.addEventListener('click', () => {
+                        countryInput.value = match;
+                        countrySuggestions.classList.add('hidden');
+                        searchCountry(match);
+                    });
+                    countrySuggestions.appendChild(li);
+                });
+                
+                countrySuggestions.classList.remove('hidden');
+                countrySuggestions.style.animation = 'fadeIn 0.3s ease';
+                
+                // If we have an exact match, search for this country automatically
+                const exactMatch = matches.find(m => m.toLowerCase() === input);
+                if (exactMatch) {
+                    searchCountry(exactMatch);
+                } else if (matches.length === 1) {
+                    // If only one match, consider it close enough
+                    searchCountry(matches[0]);
+                }
+            } else {
+                countrySuggestions.classList.add('hidden');
+            }
+            
+            // Try to search as the user types
+            tryAutoSearch(input);
+        }
+
+        // Try to automatically search for a country as user types
+        function tryAutoSearch(input) {
+            clearTimeout(debounceTimeout);
+            
+            debounceTimeout = setTimeout(() => {
+                // Only search if we have at least 3 characters
+                if (input.length >= 3) {
+                    // Look for closest match
+                    const normalizedCountries = Object.keys(countriesData).map(c => c.toLowerCase());
+                    const bestMatch = normalizedCountries.find(c => c.startsWith(input));
+                    
+                    if (bestMatch) {
+                        const actualCountry = Object.keys(countriesData).find(
+                            c => c.toLowerCase() === bestMatch
+                        );
+                        
+                        if (actualCountry) {
+                            searchCountry(actualCountry);
+                        }
+                    }
+                }
+            }, DEBOUNCE_DELAY);
+        }
+
+        // Search for a country
+        function searchCountry(countryName) {
+            // Validate country
+            if (!countryExists(countryName)) {
+                countryError.style.display = 'block';
+                return;
+            }
+            
+            // Hide error if previously shown
+            countryError.style.display = 'none';
+            
+            // Get country data
+            const countryData = getCountryCoordinates(countryName);
+            
+            if (countryData) {
+                // Update the input with proper case
+                countryInput.value = countryData.name;
+                
+                // Show on map
+                showLocationOnMap(countryData.name, countryData.lat, countryData.lng, 5);
+            }
+        }
+        
+        // Toggle sidebar visibility for responsive design
+        function toggleSidebar(forceState = null) {
+            if (forceState !== null) {
+                isSidebarVisible = forceState;
+            } else {
+                isSidebarVisible = !isSidebarVisible;
+            }
+            
+            if (isSidebarVisible) {
+                sidebar.classList.add('active');
+                sidebarToggle.innerHTML = '<i class="fas fa-chevron-left"></i>';
+            } else {
+                sidebar.classList.remove('active');
+                sidebarToggle.innerHTML = '<i class="fas fa-chevron-right"></i>';
+            }
+        }
+
+        // Event listeners
+        countryInput.addEventListener('input', () => {
+            // Hide error message on input
+            countryError.style.display = 'none';
+            
+            // Handle autocomplete
+            handleCountryInput();
+        });
+
+        countryInput.addEventListener('keydown', (e) => {
+            // Handle Enter key
+            if (e.key === 'Enter') {
+                searchCountry(countryInput.value);
+            }
+        });
+        
+        // Toggle sidebar on button click
+        sidebarToggle.addEventListener('click', () => toggleSidebar());
+        
+        // Toggle sidebar on hamburger menu click
+        hamburgerMenu.addEventListener('click', () => toggleSidebar(true));
+
+        // Close suggestions when clicking elsewhere
+        document.addEventListener('click', (e) => {
+            if (e.target !== countryInput && e.target !== countrySuggestions) {
+                countrySuggestions.classList.add('hidden');
+            }
+        });
+        
+        // Handle window resize for responsive adjustments
+        window.addEventListener('resize', () => {
+            // If window is larger than mobile breakpoint and sidebar was hidden, show it
+            if (window.innerWidth > 768 && !isSidebarVisible) {
+                toggleSidebar(true);
+            }
+        });
+
+        // Load data on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                await loadCountriesData();
+                
+                // Initialize responsive state
+                if (window.innerWidth <= 768) {
+                    toggleSidebar(false);
+                }
+            } catch (error) {
+                console.error('Failed to initialize:', error);
+            }
+        });
+    </script>
+</body>
+</html>

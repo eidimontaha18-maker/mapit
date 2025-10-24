@@ -1,0 +1,18 @@
+{
+    "sourceFile": "start-app.ps1",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1760956335309,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1760956335309,
+            "name": "Commit-0",
+            "content": "# Start Both Backend and Frontend for MapIt\r\n\r\nWrite-Host \"🚀 Starting MapIt Application...\" -ForegroundColor Cyan\r\nWrite-Host \"=\" * 60\r\nWrite-Host \"\"\r\n\r\n# Test database connection first\r\nWrite-Host \"📊 Step 1: Testing Database Connection...\" -ForegroundColor Yellow\r\nnpm run db:test\r\nif ($LASTEXITCODE -ne 0) {\r\n    Write-Host \"\"\r\n    Write-Host \"❌ Database connection failed! Please check PostgreSQL is running.\" -ForegroundColor Red\r\n    Write-Host \"\"\r\n    exit 1\r\n}\r\n\r\nWrite-Host \"\"\r\nWrite-Host \"=\" * 60\r\nWrite-Host \"\"\r\n\r\n# Start backend server\r\nWrite-Host \"🌐 Step 2: Starting Backend Server (Port 3101)...\" -ForegroundColor Yellow\r\n$backendJob = Start-Job -ScriptBlock {\r\n    Set-Location $using:PWD\r\n    node server.js\r\n}\r\n\r\n# Wait for backend to start\r\nStart-Sleep -Seconds 3\r\n\r\n# Check if backend started successfully\r\n$backendRunning = $false\r\ntry {\r\n    $response = Invoke-WebRequest -Uri \"http://127.0.0.1:3101/api/health\" -UseBasicParsing -TimeoutSec 5 -ErrorAction Stop\r\n    if ($response.StatusCode -eq 200) {\r\n        $backendRunning = $true\r\n        Write-Host \"✅ Backend server started successfully!\" -ForegroundColor Green\r\n    }\r\n} catch {\r\n    Write-Host \"❌ Backend server failed to start!\" -ForegroundColor Red\r\n    Stop-Job $backendJob\r\n    Remove-Job $backendJob\r\n    exit 1\r\n}\r\n\r\nWrite-Host \"\"\r\nWrite-Host \"=\" * 60\r\nWrite-Host \"\"\r\n\r\n# Start frontend\r\nWrite-Host \"⚛️  Step 3: Starting Frontend (Port 5173)...\" -ForegroundColor Yellow\r\nWrite-Host \"\"\r\nWrite-Host \"📱 Access your application at:\" -ForegroundColor Cyan\r\nWrite-Host \"   Frontend: http://localhost:5173\" -ForegroundColor White\r\nWrite-Host \"   Backend:  http://127.0.0.1:3101\" -ForegroundColor White\r\nWrite-Host \"\"\r\nWrite-Host \"Press Ctrl+C to stop both servers\" -ForegroundColor Yellow\r\nWrite-Host \"\"\r\n\r\n# Start frontend (this will run in foreground)\r\ntry {\r\n    npm run dev\r\n} finally {\r\n    # Clean up backend when frontend stops\r\n    Write-Host \"\"\r\n    Write-Host \"🛑 Stopping servers...\" -ForegroundColor Yellow\r\n    Stop-Job $backendJob -ErrorAction SilentlyContinue\r\n    Remove-Job $backendJob -ErrorAction SilentlyContinue\r\n    Write-Host \"✅ Servers stopped\" -ForegroundColor Green\r\n}\r\n"
+        }
+    ]
+}

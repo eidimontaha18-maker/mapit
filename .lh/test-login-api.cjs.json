@@ -1,0 +1,18 @@
+{
+    "sourceFile": "test-login-api.cjs",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1760436677471,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1760436677471,
+            "name": "Commit-0",
+            "content": "// Test login endpoint directly\r\nconst fetch = require('node-fetch');\r\n\r\nasync function testLogin() {\r\n  console.log('Testing login endpoint at http://localhost:3101/api/login');\r\n  \r\n  try {\r\n    const response = await fetch('http://localhost:3101/api/login', {\r\n      method: 'POST',\r\n      headers: {\r\n        'Content-Type': 'application/json',\r\n      },\r\n      body: JSON.stringify({\r\n        email: 'john.doe@example.com',\r\n        password: 'Password123!'\r\n      })\r\n    });\r\n    \r\n    console.log('Response status:', response.status);\r\n    console.log('Response headers:', response.headers.raw());\r\n    \r\n    const text = await response.text();\r\n    console.log('Response text:', text);\r\n    \r\n    try {\r\n      const data = JSON.parse(text);\r\n      console.log('Parsed JSON:', JSON.stringify(data, null, 2));\r\n    } catch (e) {\r\n      console.log('Could not parse JSON');\r\n    }\r\n    \r\n  } catch (error) {\r\n    console.error('Error:', error.message);\r\n  }\r\n}\r\n\r\ntestLogin();\r\n"
+        }
+    ]
+}

@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Manager</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        h1 {
+            color: #0066cc;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .panel {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+            background-color: #f9f9f9;
+        }
+        button, select {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background: #f0f0f0;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #e0e0e0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success {
+            background-color: #dff0d8;
+            color: #3c763d;
+            border: 1px solid #d6e9c6;
+        }
+        .error {
+            background-color: #f2dede;
+            color: #a94442;
+            border: 1px solid #ebccd1;
+        }
+        .tab-container {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .tab-buttons {
+            display: flex;
+            background: #f0f0f0;
+        }
+        .tab-button {
+            padding: 10px 20px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-weight: bold;
+        }
+        .tab-button.active {
+            background: #fff;
+            border-bottom: 2px solid #0066cc;
+        }
+        .tab-content {
+            padding: 20px;
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        #sqlTextarea {
+            width: 100%;
+            height: 150px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PostgreSQL Database Manager</h1>
+        
+        <div class="panel">
+            <h2>Database Tables</h2>
+            <button id="loadTablesBtn">Load Tables</button>
+            <select id="tableSelect" disabled>
+                <option>Select a table</option>
+            </select>
+            <button id="viewTableBtn" disabled>View Table Data</button>
+            <button id="viewStructureBtn" disabled>View Table Structure</button>
+        </div>
+        
+        <div class="tab-container">
+            <div class="tab-buttons">
+                <button class="tab-button active" data-tab="tableData">Table Data</button>
+                <button class="tab-button" data-tab="tableStructure">Table Structure</button>
+                <button class="tab-button" data-tab="queryTab">Custom SQL</button>
+                <button class="tab-button" data-tab="editRecord">Edit Record</button>
+            </div>
+            
+            <div id="tableData" class="tab-content active">
+                <div id="tableResults"></div>
+            </div>
+            
+            <div id="tableStructure" class="tab-content">
+                <div id="structureResults"></div>
+            </div>
+            
+            <div id="queryTab" class="tab-content">
+                <h3>Execute SQL Query</h3>
+                <div class="form-group">
+                    <textarea id="sqlTextarea" placeholder="Enter your SQL query here..."></textarea>
+                </div>
+                <button id="executeQueryBtn">Execute Query</button>
+                <div id="queryResults"></div>
+            </div>
+            
+            <div id="editRecord" class="tab-content">
+                <h3>Edit Record</h3>
+                <div class="form-group">
+                    <label for="recordId">Record ID:</label>
+                    <input type="text" id="recordId" placeholder="ID of record to edit">
+                </div>
+                <div class="form-group">
+                    <label for="recordData">Record Data (JSON):</label>
+                    <textarea id="recordData" placeholder='{"column1": "value1", "column2": "value2"}'></textarea>
+                </div>
+                <button id="updateRecordBtn">Update Record</button>
+                <button id="deleteRecordBtn">Delete Record</button>
+                <button id="insertRecordBtn">Insert New Record</button>
+                <div id="editStatus"></div>
+            </div>
+        </div>
+        
+        <div id="statusMessage"></div>
+    </div>
+
+    <script>
+        // API base URL
+        const API_BASE_URL = '/api/db';
+        
+        // DOM elements
+        const tableSelect = document.getElementById('tableSelect');
+        const loadTablesBtn = document.getElementById('loadTablesBtn');
+        const viewTableBtn = document.getElementById('viewTableBtn');
+        const viewStructureBtn = document.getElementById('viewStructureBtn');
+        const tableResults = document.getElementById('tableResults');
+        const structureResults = document.getElementById('structureResults');
+        const statusMessage = document.getElementById('statusMessage');
+        const sqlTextarea = document.getElementById('sqlTextarea');
+        const executeQueryBtn = document.getElementById('executeQueryBtn');
+        const queryResults = document.getElementById('queryResults');
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const recordId = document.getElementById('recordId');
+        const recordData = document.getElementById('recordData');
+        const updateRecordBtn = document.getElementById('updateRecordBtn');
+        const deleteRecordBtn = document.getElementById('deleteRecordBtn');
+        const insertRecordBtn = document.getElementById('insertRecordBtn');
+        const editStatus = document.getElementById('editStatus');
+        
+        // Show status message
+        function showStatus(message, isError = false) {
+            statusMessage.textContent = message;
+            statusMessage.className = isError ? 'status error' : 'status success';
+            setTimeout(() => {
+                statusMessage.textContent = '';
+                statusMessage.className = '';
+            }, 5000);
+        }
+        
+        // Load tables from database
+        loadTablesBtn.addEventListener('click', async () => {
+            try {
+                const response = await fetch(`${API_BASE_URL}/tables`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Clear existing options
+                    tableSelect.innerHTML = '<option value="">Select a table</option>';
+                    
+                    // Add table options
+                    data.tables.forEach(table => {
+                        const option = document.createElement('option');
+                        option.value = table;
+                        option.textContent = table;
+                        tableSelect.appendChild(option);
+                    });
+                    
+                    tableSelect.disabled = false;
+                    viewTableBtn.disabled = false;
+                    viewStructureBtn.disabled = false;
+                    
+                    showStatus(`Loaded ${data.tables.length} tables`);
+                } else {
+                    showStatus(`Error: ${data.error}`, true);
+                }
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, true);
+            }
+        });
+        
+        // View table data
+        viewTableBtn.addEventListener('click', async () => {
+            const tableName = tableSelect.value;
+            if (!tableName) {
+                showStatus('Please select a table', true);
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/tables/${tableName}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayTableData(data.records);
+                    switchTab('tableData');
+                } else {
+                    showStatus(`Error: ${data.error}`, true);
+                }
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, true);
+            }
+        });
+        
+        // View table structure
+        viewStructureBtn.addEventListener('click', async () => {
+            const tableName = tableSelect.value;
+            if (!tableName) {
+                showStatus('Please select a table', true);
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/tables/${tableName}/structure`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayTableStructure(data.structure);
+                    switchTab('tableStructure');
+                } else {
+                    showStatus(`Error: ${data.error}`, true);
+                }
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, true);
+            }
+        });
+        
+        // Execute custom SQL query
+        executeQueryBtn.addEventListener('click', async () => {
+            const sql = sqlTextarea.value.trim();
+            if (!sql) {
+                showStatus('Please enter a SQL query', true);
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/query`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ sql })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayQueryResults(data);
+                } else {
+                    showStatus(`Error: ${data.error}`, true);
+                }
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, true);
+            }
+        });
+        
+        // Update record
+        updateRecordBtn.addEventListener('click', async () => {
+            const tableName = tableSelect.value;
+            const id = recordId.value.trim();
+            let jsonData;
+            
+            if (!tableName) {
+                showStatus('Please select a table', true);
+                return;
+            }
+            
+            if (!id) {
+                showStatus('Please enter a record ID', true);
+                return;
+            }
+            
+            try {
+                jsonData = JSON.parse(recordData.value);
+            } catch (error) {
+                showStatus('Invalid JSON data', true);
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/tables/${tableName}/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(jsonData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    editStatus.innerHTML = `<pre>${JSON.stringify(data.record, null, 2)}</pre>`;
+                    showStatus('Record updated successfully');
+                } else {
+                    showStatus(`Error: ${data.error}`, true);
+                }
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, true);
+            }
+        });
+        
+        // Delete record
+        deleteRecordBtn.addEventListener('click', async () => {
+            const tableName = tableSelect.value;
+            const id = recordId.value.trim();
+            
+            if (!tableName) {
+                showStatus('Please select a table', true);
+                return;
+            }
+            
+            if (!id) {
+                showStatus('Please enter a record ID', true);
+                return;
+            }
+            
+            if (!confirm(`Are you sure you want to delete record with ID ${id} from ${tableName}?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/tables/${tableName}/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    editStatus.textContent = data.message;
+                    showStatus('Record deleted successfully');
+                } else {
+                    showStatus(`Error: ${data.error}`, true);
+                }
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, true);
+            }
+        });
+        
+        // Insert new record
+        insertRecordBtn.addEventListener('click', async () => {
+            const tableName = tableSelect.value;
+            let jsonData;
+            
+            if (!tableName) {
+                showStatus('Please select a table', true);
+                return;
+            }
+            
+            try {
+                jsonData = JSON.parse(recordData.value);
+            } catch (error) {
+                showStatus('Invalid JSON data', true);
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/tables/${tableName}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(jsonData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    editStatus.innerHTML = `<pre>${JSON.stringify(data.record, null, 2)}</pre>`;
+                    showStatus('Record inserted successfully');
+                } else {
+                    showStatus(`Error: ${data.error}`, true);
+                }
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, true);
+            }
+        });
+        
+        // Display table data
+        function displayTableData(records) {
+            if (!records || records.length === 0) {
+                tableResults.innerHTML = '<p>No data found in this table.</p>';
+                return;
+            }
+            
+            // Create table
+            const table = document.createElement('table');
+            const thead = document.createElement('thead');
+            const tbody = document.createElement('tbody');
+            
+            // Create header row
+            const headerRow = document.createElement('tr');
+            Object.keys(records[0]).forEach(key => {
+                const th = document.createElement('th');
+                th.textContent = key;
+                headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+            
+            // Create data rows
+            records.forEach(record => {
+                const row = document.createElement('tr');
+                Object.values(record).forEach(value => {
+                    const td = document.createElement('td');
+                    td.textContent = value !== null ? String(value) : 'null';
+                    row.appendChild(td);
+                });
+                tbody.appendChild(row);
+            });
+            
+            table.appendChild(thead);
+            table.appendChild(tbody);
+            
+            tableResults.innerHTML = '';
+            tableResults.appendChild(table);
+        }
+        
+        // Display table structure
+        function displayTableStructure(structure) {
+            if (!structure || structure.length === 0) {
+                structureResults.innerHTML = '<p>No structure information available.</p>';
+                return;
+            }
+            
+            // Create table
+            const table = document.createElement('table');
+            const thead = document.createElement('thead');
+            const tbody = document.createElement('tbody');
+            
+            // Create header row
+            const headerRow = document.createElement('tr');
+            ['Column Name', 'Data Type', 'Nullable', 'Default'].forEach(header => {
+                const th = document.createElement('th');
+                th.textContent = header;
+                headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+            
+            // Create data rows
+            structure.forEach(column => {
+                const row = document.createElement('tr');
+                
+                const colName = document.createElement('td');
+                colName.textContent = column.column_name;
+                
+                const dataType = document.createElement('td');
+                dataType.textContent = column.data_type;
+                
+                const nullable = document.createElement('td');
+                nullable.textContent = column.is_nullable === 'YES' ? 'Yes' : 'No';
+                
+                const defaultVal = document.createElement('td');
+                defaultVal.textContent = column.column_default || 'None';
+                
+                row.appendChild(colName);
+                row.appendChild(dataType);
+                row.appendChild(nullable);
+                row.appendChild(defaultVal);
+                
+                tbody.appendChild(row);
+            });
+            
+            table.appendChild(thead);
+            table.appendChild(tbody);
+            
+            structureResults.innerHTML = '';
+            structureResults.appendChild(table);
+        }
+        
+        // Display query results
+        function displayQueryResults(data) {
+            if (!data.rows || data.rows.length === 0) {
+                queryResults.innerHTML = `<p>Query executed successfully. ${data.rowCount} row(s) affected.</p>`;
+                return;
+            }
+            
+            queryResults.innerHTML = `<p>Query executed successfully. ${data.rowCount} row(s) returned.</p>`;
+            
+            // Create table
+            const table = document.createElement('table');
+            const thead = document.createElement('thead');
+            const tbody = document.createElement('tbody');
+            
+            // Create header row
+            const headerRow = document.createElement('tr');
+            Object.keys(data.rows[0]).forEach(key => {
+                const th = document.createElement('th');
+                th.textContent = key;
+                headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+            
+            // Create data rows
+            data.rows.forEach(row => {
+                const tr = document.createElement('tr');
+                Object.values(row).forEach(value => {
+                    const td = document.createElement('td');
+                    td.textContent = value !== null ? String(value) : 'null';
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+            
+            table.appendChild(thead);
+            table.appendChild(tbody);
+            
+            queryResults.appendChild(table);
+        }
+        
+        // Tab switching
+        function switchTab(tabId) {
+            // Update tab buttons
+            tabButtons.forEach(button => {
+                if (button.getAttribute('data-tab') === tabId) {
+                    button.classList.add('active');
+                } else {
+                    button.classList.remove('active');
+                }
+            });
+            
+            // Update tab content
+            tabContents.forEach(content => {
+                if (content.id === tabId) {
+                    content.classList.add('active');
+                } else {
+                    content.classList.remove('active');
+                }
+            });
+        }
+        
+        // Add event listeners to tab buttons
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                switchTab(button.getAttribute('data-tab'));
+            });
+        });
+    </script>
+</body>
+</html>

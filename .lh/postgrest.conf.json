@@ -1,0 +1,18 @@
+{
+    "sourceFile": "postgrest.conf",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1760430981585,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1760430981585,
+            "name": "Commit-0",
+            "content": "db-uri = \"postgres://postgres:NewStrongPass123@localhost:5432/mapit\"\r\ndb-schemas = \"public\"\r\ndb-anon-role = \"anon\"\r\n\r\n# JWT secret used for authentication\r\njwt-secret = \"your-jwt-secret-key-here\"\r\n\r\n# CORS settings\r\nserver-cors-origins = \"http://localhost:8080, http://127.0.0.1:8080, http://localhost:5173, http://127.0.0.1:5173\"\r\nserver-cors-max-age = 86400\r\n\r\n# Server port\r\nserver-port = 3100"
+        }
+    ]
+}

@@ -1,0 +1,60 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 400px; margin: 50px auto; padding: 20px; }
+        .form-group { margin: 15px 0; }
+        input { width: 100%; padding: 10px; margin: 5px 0; }
+        button { width: 100%; padding: 12px; background: #007bff; color: white; border: none; cursor: pointer; }
+        .result { margin: 20px 0; padding: 10px; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h2>Login Test</h2>
+    <form id="loginForm">
+        <div class="form-group">
+            <input type="email" id="email" placeholder="Email" value="alice@example.com" required>
+        </div>
+        <div class="form-group">
+            <input type="password" id="password" placeholder="Password" value="Password123!" required>
+        </div>
+        <button type="submit">Login</button>
+    </form>
+    
+    <div id="result"></div>
+    
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const resultDiv = document.getElementById('result');
+            
+            try {
+                const response = await fetch('http://127.0.0.1:3101/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    resultDiv.innerHTML = '<div class="result success">✅ Login successful!<br>Welcome, ' + result.user.first_name + ' ' + result.user.last_name + '</div>';
+                } else {
+                    resultDiv.innerHTML = '<div class="result error">❌ Login failed: ' + result.error + '</div>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = '<div class="result error">❌ Connection error: ' + error.message + '</div>';
+            }
+        });
+    </script>
+</body>
+</html>

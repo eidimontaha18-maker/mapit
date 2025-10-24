@@ -1,0 +1,18 @@
+{
+    "sourceFile": "final-login-test.js",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1760431953698,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1760431953698,
+            "name": "Commit-0",
+            "content": "import fetch from 'node-fetch';\r\n\r\nasync function testLoginAPI() {\r\n    console.log('🚀 Testing Login API...\\n');\r\n    \r\n    // Wait for server to be ready\r\n    await new Promise(resolve => setTimeout(resolve, 1000));\r\n    \r\n    const testUsers = [\r\n        { email: 'alice@example.com', password: 'Password123!', expected: true },\r\n        { email: 'bob@example.com', password: 'Password123!', expected: true },\r\n        { email: 'eidimontaha188@gmail.com', password: 'wrongpassword', expected: false },\r\n        { email: 'nonexistent@example.com', password: 'anything', expected: false }\r\n    ];\r\n    \r\n    for (const user of testUsers) {\r\n        console.log(`Testing: ${user.email}`);\r\n        \r\n        try {\r\n            const response = await fetch('http://127.0.0.1:3101/api/login', {\r\n                method: 'POST',\r\n                headers: {\r\n                    'Content-Type': 'application/json'\r\n                },\r\n                body: JSON.stringify({\r\n                    email: user.email,\r\n                    password: user.password\r\n                })\r\n            });\r\n            \r\n            const result = await response.json();\r\n            \r\n            if (user.expected && result.success) {\r\n                console.log(`✅ SUCCESS: ${user.email} logged in successfully`);\r\n                console.log(`   Welcome: ${result.user.first_name} ${result.user.last_name}`);\r\n            } else if (!user.expected && !result.success) {\r\n                console.log(`✅ EXPECTED FAILURE: ${user.email} correctly rejected`);\r\n            } else if (user.expected && !result.success) {\r\n                console.log(`❌ UNEXPECTED FAILURE: ${user.email} should have worked`);\r\n                console.log(`   Error: ${result.error}`);\r\n            } else {\r\n                console.log(`❌ UNEXPECTED SUCCESS: ${user.email} should have failed`);\r\n            }\r\n            \r\n        } catch (error) {\r\n            console.log(`❌ CONNECTION ERROR: ${error.message}`);\r\n            break;\r\n        }\r\n        \r\n        console.log(''); // Empty line\r\n    }\r\n}\r\n\r\ntestLoginAPI();"
+        }
+    ]
+}

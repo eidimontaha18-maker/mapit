@@ -1,0 +1,18 @@
+{
+    "sourceFile": "test-basic-server.js",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1760433307211,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1760433307211,
+            "name": "Commit-0",
+            "content": "import http from 'http';\r\n\r\nconst server = http.createServer((req, res) => {\r\n  console.log(`${req.method} ${req.url}`);\r\n  res.writeHead(200, { 'Content-Type': 'application/json' });\r\n  res.end(JSON.stringify({ message: 'Hello World' }));\r\n});\r\n\r\nconst PORT = 3101;\r\nconst HOST = '127.0.0.1';\r\n\r\nserver.listen(PORT, HOST, () => {\r\n  console.log(`Server running at http://${HOST}:${PORT}/`);\r\n});\r\n\r\nserver.on('error', (err) => {\r\n  console.error('Server error:', err);\r\n});\r\n\r\n// Keep alive\r\nsetInterval(() => {\r\n  console.log('Server still running...');\r\n}, 30000);\r\n"
+        }
+    ]
+}

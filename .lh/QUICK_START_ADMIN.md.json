@@ -1,0 +1,18 @@
+{
+    "sourceFile": "QUICK_START_ADMIN.md",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1761128050419,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1761128050419,
+            "name": "Commit-0",
+            "content": "# 🚀 Quick Start Guide - Admin Dashboard\r\n\r\n## Login Now!\r\n\r\n### 1. Make Sure Server is Running\r\n```bash\r\nnpm run server\r\n```\r\n*Should show: ✅ SUCCESS: API server running on http://127.0.0.1:3101*\r\n\r\n### 2. Make Sure Frontend is Running\r\n```bash\r\nnpm run dev\r\n```\r\n*Should show: Local: http://localhost:5173/*\r\n\r\n### 3. Login as Admin\r\n- Open: **http://localhost:5173/login**\r\n- Email: **admin@mapit.com**\r\n- Password: **admin123**\r\n- Click **Login**\r\n\r\n### 4. Enjoy Your Dashboard! 🎉\r\nYou'll be automatically redirected to the admin dashboard where you can:\r\n- View all customer maps\r\n- See statistics\r\n- Search and filter\r\n- View any map\r\n\r\n---\r\n\r\n## What You Get\r\n\r\n### Beautiful Dashboard View\r\n```\r\n┌────────────────────────────────────────────┐\r\n│  🛡️ Admin Dashboard      [Logout Button]  │\r\n├────────────────────────────────────────────┤\r\n│  📍 Maps: 150   👥 Customers: 45   📌 328 │\r\n├────────────────────────────────────────────┤\r\n│  🔍 Search...  [All][Active] [Refresh]    │\r\n├────────────────────────────────────────────┤\r\n│  All Maps Table (sortable, paginated)     │\r\n└────────────────────────────────────────────┘\r\n```\r\n\r\n### Features Ready to Use\r\n✅ Search by title, customer, email, or country  \r\n✅ Filter by active/inactive status  \r\n✅ Sort by any column (click headers)  \r\n✅ Paginated view (10 items per page)  \r\n✅ View any map (opens in new tab)  \r\n✅ Real-time statistics  \r\n✅ Fully responsive (works on phone!)  \r\n\r\n---\r\n\r\n## That's It!\r\n\r\nEverything is set up and ready. Just login and start managing your maps!\r\n\r\n**Need help?** Check `ADMIN_DASHBOARD_README.md` for detailed documentation.\r\n\r\nHappy managing! 🎊\r\n"
+        }
+    ]
+}

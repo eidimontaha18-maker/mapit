@@ -1,0 +1,246 @@
+.map-type-selector-wrapper {
+  position: fixed;
+  top: 76px;
+  right: 20px;
+  z-index: 1000;
+  font-family: 'Roboto', Arial, sans-serif;
+}
+
+/* Trigger button (collapsed state) */
+.map-type-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: white;
+  border: 2px solid #dadce0;
+  border-radius: 2px;
+  padding: 0;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+  overflow: hidden;
+  min-width: 120px;
+}
+
+.map-type-trigger:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  border-color: #4285f4;
+  transform: translateY(-1px);
+}
+
+.map-type-trigger-preview {
+  width: 72px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  position: relative;
+  background-size: cover !important;
+  background-position: center !important;
+  border-right: 1px solid #e0e0e0;
+}
+
+.map-type-trigger-icon {
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5));
+  position: relative;
+  z-index: 2;
+}
+
+.map-type-trigger-label {
+  padding: 0 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  flex: 1;
+}
+
+.map-type-trigger-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: #1a73e8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+/* Expanded panel */
+.map-type-selector-panel {
+  background: white;
+  border-radius: 4px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  padding: 12px;
+  min-width: 200px;
+  animation: slideIn 0.2s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.map-type-selector-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.map-type-selector-header h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.map-type-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #666;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 2px;
+  transition: all 0.2s ease;
+}
+
+.map-type-close:hover {
+  background: #f0f0f0;
+  color: #333;
+}
+
+/* Grid layout for map types */
+.map-type-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.map-type-option {
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.map-type-option:hover {
+  border-color: #4285f4;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.map-type-option.active {
+  border-color: #4285f4;
+  box-shadow: 0 0 0 1px #4285f4;
+}
+
+.map-type-preview {
+  width: 100%;
+  height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  position: relative;
+  background-size: cover !important;
+  background-position: center !important;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.map-type-icon {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+  position: relative;
+  z-index: 2;
+}
+
+.map-type-check {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  background: #4285f4;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.map-type-name {
+  padding: 8px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #333;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  background: #f9f9f9;
+  border-top: 1px solid #e0e0e0;
+}
+
+.map-type-option.active .map-type-name {
+  background: #e8f0fe;
+  color: #4285f4;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .map-type-selector-wrapper {
+    top: 66px;
+    right: 10px;
+  }
+
+  .map-type-trigger {
+    padding: 0;
+  }
+
+  .map-type-trigger-preview {
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
+  }
+
+  .map-type-trigger-label {
+    padding: 0 8px;
+  }
+
+  .map-type-trigger-name {
+    font-size: 11px;
+  }
+
+  .map-type-selector-panel {
+    max-width: calc(100vw - 40px);
+  }
+
+  .map-type-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .map-type-preview {
+    height: 70px;
+    font-size: 24px;
+  }
+}

@@ -1,0 +1,22 @@
+{
+    "sourceFile": "setup-admin.js",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 1,
+            "patches": [
+                {
+                    "date": 1761127363795,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1761128140164,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -40,21 +40,23 @@\n     \r\n     console.log('Index created successfully!');\r\n     \r\n     // Hash the default admin password\r\n-    const defaultPassword = 'admin123';\r\n+    const defaultPassword = '123456';\r\n     const hashedPassword = bcrypt.hashSync(defaultPassword, 10);\r\n     \r\n+    // Delete existing admin first to update password\r\n+    await pool.query(`DELETE FROM admin WHERE email = $1`, ['admin@mapit.com']);\r\n+    \r\n     // Insert default admin\r\n     await pool.query(`\r\n       INSERT INTO admin (email, password_hash, first_name, last_name)\r\n       VALUES ($1, $2, $3, $4)\r\n-      ON CONFLICT (email) DO NOTHING\r\n     `, ['admin@mapit.com', hashedPassword, 'Admin', 'User']);\r\n     \r\n     console.log('Default admin user created!');\r\n     console.log('Email: admin@mapit.com');\r\n-    console.log('Password: admin123');\r\n+    console.log('Password: 123456');\r\n     console.log('⚠️  IMPORTANT: Please change this password after first login!');\r\n     \r\n     await pool.end();\r\n   } catch (err) {\r\n"
+                }
+            ],
+            "date": 1761127363795,
+            "name": "Commit-0",
+            "content": "import pkg from 'pg';\r\nimport bcrypt from 'bcryptjs';\r\nimport dotenv from 'dotenv';\r\n\r\ndotenv.config();\r\n\r\nconst { Pool } = pkg;\r\n\r\nconst pool = new Pool({\r\n  user: process.env.DB_USER || 'postgres',\r\n  host: process.env.DB_HOST || 'localhost',\r\n  database: process.env.DB_NAME || 'mapit',\r\n  password: process.env.DB_PASSWORD || 'postgres',\r\n  port: parseInt(process.env.DB_PORT || '5432'),\r\n});\r\n\r\nasync function createAdminTable() {\r\n  try {\r\n    console.log('Creating admin table...');\r\n    \r\n    // Create admin table\r\n    await pool.query(`\r\n      CREATE TABLE IF NOT EXISTS admin (\r\n        admin_id SERIAL PRIMARY KEY,\r\n        email VARCHAR(255) NOT NULL UNIQUE,\r\n        password_hash VARCHAR(255) NOT NULL,\r\n        first_name VARCHAR(100),\r\n        last_name VARCHAR(100),\r\n        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,\r\n        last_login TIMESTAMP WITH TIME ZONE\r\n      )\r\n    `);\r\n    \r\n    console.log('Admin table created successfully!');\r\n    \r\n    // Create index\r\n    await pool.query(`\r\n      CREATE INDEX IF NOT EXISTS idx_admin_email ON admin(email)\r\n    `);\r\n    \r\n    console.log('Index created successfully!');\r\n    \r\n    // Hash the default admin password\r\n    const defaultPassword = 'admin123';\r\n    const hashedPassword = bcrypt.hashSync(defaultPassword, 10);\r\n    \r\n    // Insert default admin\r\n    await pool.query(`\r\n      INSERT INTO admin (email, password_hash, first_name, last_name)\r\n      VALUES ($1, $2, $3, $4)\r\n      ON CONFLICT (email) DO NOTHING\r\n    `, ['admin@mapit.com', hashedPassword, 'Admin', 'User']);\r\n    \r\n    console.log('Default admin user created!');\r\n    console.log('Email: admin@mapit.com');\r\n    console.log('Password: admin123');\r\n    console.log('⚠️  IMPORTANT: Please change this password after first login!');\r\n    \r\n    await pool.end();\r\n  } catch (err) {\r\n    console.error('Error creating admin table:', err);\r\n    await pool.end();\r\n    process.exit(1);\r\n  }\r\n}\r\n\r\ncreateAdminTable();\r\n"
+        }
+    ]
+}

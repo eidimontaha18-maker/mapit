@@ -1,0 +1,18 @@
+{
+    "sourceFile": "test-api-http.js",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1760432531640,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1760432531640,
+            "name": "Commit-0",
+            "content": "/**\r\n * Test API endpoints using http module\r\n */\r\n\r\nimport http from 'http';\r\n\r\nfunction testEndpoint(path, method = 'GET', body = null) {\r\n  return new Promise((resolve, reject) => {\r\n    const options = {\r\n      hostname: 'localhost',\r\n      port: 3101,\r\n      path: path,\r\n      method: method,\r\n      headers: {\r\n        'Content-Type': 'application/json'\r\n      }\r\n    };\r\n    \r\n    const req = http.request(options, (res) => {\r\n      let data = '';\r\n      \r\n      res.on('data', (chunk) => {\r\n        data += chunk;\r\n      });\r\n      \r\n      res.on('end', () => {\r\n        resolve({ status: res.statusCode, body: data });\r\n      });\r\n    });\r\n    \r\n    req.on('error', (err) => {\r\n      reject(err);\r\n    });\r\n    \r\n    if (body) {\r\n      req.write(JSON.stringify(body));\r\n    }\r\n    \r\n    req.end();\r\n  });\r\n}\r\n\r\nasync function runTests() {\r\n  console.log('Testing API endpoints...\\n');\r\n  \r\n  // Test 1: Health check\r\n  try {\r\n    console.log('1. Testing /api/health...');\r\n    const result = await testEndpoint('/api/health');\r\n    console.log('   Status:', result.status);\r\n    console.log('   Body:', result.body);\r\n  } catch (err) {\r\n    console.error('   ❌ Error:', err.message);\r\n  }\r\n  \r\n  // Test 2: Login\r\n  try {\r\n    console.log('\\n2. Testing /api/login...');\r\n    const result = await testEndpoint('/api/login', 'POST', {\r\n      email: 'test@example.com',\r\n      password: 'test123'\r\n    });\r\n    console.log('   Status:', result.status);\r\n    console.log('   Body:', result.body);\r\n  } catch (err) {\r\n    console.error('   ❌ Error:', err.message);\r\n  }\r\n  \r\n  // Test 3: Get tables\r\n  try {\r\n    console.log('\\n3. Testing /api/db/tables...');\r\n    const result = await testEndpoint('/api/db/tables');\r\n    console.log('   Status:', result.status);\r\n    console.log('   Body:', result.body);\r\n  } catch (err) {\r\n    console.error('   ❌ Error:', err.message);\r\n  }\r\n  \r\n  // Test 4: Get maps\r\n  try {\r\n    console.log('\\n4. Testing /api/db/tables/map?customer_id=17...');\r\n    const result = await testEndpoint('/api/db/tables/map?customer_id=17');\r\n    console.log('   Status:', result.status);\r\n    console.log('   Body:', result.body);\r\n  } catch (err) {\r\n    console.error('   ❌ Error:', err.message);\r\n  }\r\n  \r\n  process.exit(0);\r\n}\r\n\r\nrunTests();\r\n"
+        }
+    ]
+}

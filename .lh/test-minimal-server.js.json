@@ -1,0 +1,18 @@
+{
+    "sourceFile": "test-minimal-server.js",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1760433095947,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1760433095947,
+            "name": "Commit-0",
+            "content": "/**\r\n * Minimal test server\r\n */\r\n\r\nimport express from 'express';\r\nimport cors from 'cors';\r\n\r\nconst app = express();\r\nconst PORT = 3101;\r\nconst HOST = '127.0.0.1';\r\n\r\napp.use(cors());\r\napp.use(express.json());\r\n\r\n// Test route\r\napp.get('/api/test', (req, res) => {\r\n  console.log('[GET /api/test] Request received');\r\n  res.json({ success: true, message: 'Test endpoint works!' });\r\n});\r\n\r\n// Health route\r\napp.get('/api/health', (req, res) => {\r\n  console.log('[GET /api/health] Request received');\r\n  res.json({ status: 'ok', time: new Date() });\r\n});\r\n\r\n// Start server\r\nconst server = app.listen(PORT, HOST, () => {\r\n  console.log(`✅ Test server running on http://${HOST}:${PORT}`);\r\n});\r\n\r\nserver.on('error', (err) => {\r\n  console.error(`❌ Server error:`, err);\r\n});\r\n\r\n// Keep process alive\r\nprocess.on('SIGTERM', () => {\r\n  console.log('SIGTERM received, shutting down');\r\n  server.close(() => {\r\n    console.log('Server closed');\r\n    process.exit(0);\r\n  });\r\n});\r\n\r\nconsole.log('Server script loaded');\r\n"
+        }
+    ]
+}

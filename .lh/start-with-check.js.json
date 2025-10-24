@@ -1,0 +1,22 @@
+{
+    "sourceFile": "start-with-check.js",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 1,
+            "patches": [
+                {
+                    "date": 1760955687662,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1760955871699,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -34,10 +34,9 @@\n   await dbConfig.closePool();\r\n   \r\n   // Start the server\r\n   const serverProcess = spawn('node', ['server.js'], {\r\n-    stdio: 'inherit',\r\n-    shell: true\r\n+    stdio: 'inherit'\r\n   });\r\n   \r\n   serverProcess.on('error', (error) => {\r\n     console.error('Failed to start server:', error);\r\n"
+                }
+            ],
+            "date": 1760955687662,
+            "name": "Commit-0",
+            "content": "/**\r\n * Quick Database Check and Server Startup\r\n * \r\n * This script checks database connectivity before starting the server\r\n * Run: node start-with-check.js\r\n */\r\n\r\nimport dbConfig from './config/database.js';\r\nimport { spawn } from 'child_process';\r\n\r\nconsole.log('🚀 MapIt Server Startup\\n');\r\nconsole.log('=' .repeat(50));\r\n\r\n// Test database connection first\r\nconsole.log('\\n📊 Step 1: Testing Database Connection...\\n');\r\n\r\ntry {\r\n  const connected = await dbConfig.testConnection();\r\n  \r\n  if (!connected) {\r\n    console.error('\\n❌ Cannot start server: Database connection failed!\\n');\r\n    console.log('Please check:');\r\n    console.log('  1. PostgreSQL is running');\r\n    console.log('  2. Database \"mapit\" exists');\r\n    console.log('  3. Credentials in .env are correct\\n');\r\n    process.exit(1);\r\n  }\r\n  \r\n  console.log('\\n✅ Database check passed!\\n');\r\n  console.log('=' .repeat(50));\r\n  console.log('\\n🌐 Step 2: Starting Express Server...\\n');\r\n  \r\n  // Close the test connection pool\r\n  await dbConfig.closePool();\r\n  \r\n  // Start the server\r\n  const serverProcess = spawn('node', ['server.js'], {\r\n    stdio: 'inherit',\r\n    shell: true\r\n  });\r\n  \r\n  serverProcess.on('error', (error) => {\r\n    console.error('Failed to start server:', error);\r\n  });\r\n  \r\n  serverProcess.on('exit', (code) => {\r\n    console.log(`\\nServer exited with code ${code}`);\r\n    process.exit(code || 0);\r\n  });\r\n  \r\n} catch (error) {\r\n  console.error('\\n❌ Startup error:', error.message);\r\n  process.exit(1);\r\n}\r\n"
+        }
+    ]
+}

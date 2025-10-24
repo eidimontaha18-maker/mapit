@@ -1,0 +1,18 @@
+{
+    "sourceFile": "check-customers-data.cjs",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1760436677523,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1760436677523,
+            "name": "Commit-0",
+            "content": "// Check customer data\r\nconst { Pool } = require('pg');\r\n\r\nconst pool = new Pool({\r\n  user: 'postgres',\r\n  host: 'localhost',\r\n  database: 'mapit',\r\n  password: 'NewStrongPass123',\r\n  port: 5432,\r\n});\r\n\r\nasync function checkCustomers() {\r\n  try {\r\n    console.log('\\n=== ALL CUSTOMERS ===');\r\n    const result = await pool.query(`\r\n      SELECT customer_id, email, first_name, last_name, \r\n             LEFT(password_hash, 20) as password_preview\r\n      FROM customer \r\n      ORDER BY customer_id;\r\n    `);\r\n    \r\n    if (result.rows.length === 0) {\r\n      console.log('❌ NO CUSTOMERS FOUND IN DATABASE!');\r\n      console.log('\\nYou need to register a user first.');\r\n    } else {\r\n      result.rows.forEach(row => {\r\n        console.log(`ID: ${row.customer_id}`);\r\n        console.log(`  Email: ${row.email}`);\r\n        console.log(`  Name: ${row.first_name} ${row.last_name}`);\r\n        console.log(`  Password Hash Preview: ${row.password_preview}...`);\r\n        console.log('');\r\n      });\r\n      console.log(`Total customers: ${result.rows.length}`);\r\n    }\r\n    \r\n  } catch (error) {\r\n    console.error('Error:', error.message);\r\n  } finally {\r\n    await pool.end();\r\n  }\r\n}\r\n\r\ncheckCustomers();\r\n"
+        }
+    ]
+}

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Map 10 Zones Test</title>
+</head>
+<body>
+    <h1>Testing Map 10 Zones Display</h1>
+    
+    <div style="margin: 20px; padding: 20px; border: 1px solid #ccc; border-radius: 8px;">
+        <h3>Map Information</h3>
+        <p><strong>Map ID:</strong> 10</p>
+        <p><strong>Map Code:</strong> MAP-1LBN-H1FH</p>
+        <p><strong>Title:</strong> map1</p>
+        
+        <h3>Zones Found:</h3>
+        <div id="zones-list">Loading zones...</div>
+    </div>
+    
+    <div style="margin: 20px;">
+        <a href="http://localhost:5173" target="_blank">Open Full Application</a>
+    </div>
+
+    <script>
+        // Fetch and display zones
+        fetch('http://localhost:3101/api/db/tables/zones?map_id=10')
+            .then(response => response.json())
+            .then(data => {
+                const zonesList = document.getElementById('zones-list');
+                if (data.success && data.records.length > 0) {
+                    let html = '<ul>';
+                    data.records.forEach(zone => {
+                        html += `<li>
+                            <span style="display: inline-block; width: 20px; height: 20px; background-color: ${zone.color}; border-radius: 3px; margin-right: 10px; vertical-align: middle;"></span>
+                            <strong>${zone.name}</strong> 
+                            <span style="color: #666; font-size: 12px;">(${zone.color})</span>
+                        </li>`;
+                    });
+                    html += '</ul>';
+                    zonesList.innerHTML = html;
+                } else {
+                    zonesList.innerHTML = '<p>No zones found for this map.</p>';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('zones-list').innerHTML = '<p>Error loading zones: ' + error.message + '</p>';
+            });
+    </script>
+</body>
+</html>

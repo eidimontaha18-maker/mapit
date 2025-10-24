@@ -1,0 +1,29 @@
+.admin-layout {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.admin-content {
+  transition: margin-left 0.3s ease;
+  min-height: 100vh;
+  background: transparent;
+}
+
+.admin-content-with-navbar {
+  padding-top: 64px;
+}
+
+.admin-content.sidebar-open {
+  margin-left: 260px;
+}
+
+.admin-content.sidebar-closed {
+  margin-left: 70px;
+}
+
+@media (max-width: 768px) {
+  .admin-content.sidebar-open,
+  .admin-content.sidebar-closed {
+    margin-left: 0;
+  }
+}

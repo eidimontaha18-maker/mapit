@@ -1,0 +1,18 @@
+{
+    "sourceFile": "test-db-config.js",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1760955673031,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1760955673031,
+            "name": "Commit-0",
+            "content": "/**\r\n * Test Database Connection\r\n * \r\n * This script tests the database connection using the centralized config\r\n * Run: node test-db-config.js\r\n */\r\n\r\nimport dbConfig from './config/database.js';\r\n\r\nconsole.log('🔍 Testing Database Connection...\\n');\r\n\r\nconsole.log('📋 Configuration:');\r\nconsole.log('   Host:', dbConfig.db.host);\r\nconsole.log('   Port:', dbConfig.db.port);\r\nconsole.log('   Database:', dbConfig.db.database);\r\nconsole.log('   User:', dbConfig.db.user);\r\nconsole.log('   PostgREST:', `http://${dbConfig.postgrest.host}:${dbConfig.postgrest.port}`);\r\nconsole.log('');\r\n\r\n// Test the connection\r\ntry {\r\n  const result = await dbConfig.testConnection();\r\n  \r\n  if (result) {\r\n    console.log('\\n✅ All connections working!');\r\n    console.log('\\n📚 Next steps:');\r\n    console.log('   1. Start your server: npm run server');\r\n    console.log('   2. Start PostgREST: postgrest postgrest.conf');\r\n    console.log('   3. Start frontend: npm run dev');\r\n  } else {\r\n    console.log('\\n❌ Connection failed. Please check:');\r\n    console.log('   1. PostgreSQL is running');\r\n    console.log('   2. Database \"mapit\" exists');\r\n    console.log('   3. Credentials in .env are correct');\r\n  }\r\n} catch (error) {\r\n  console.error('\\n❌ Error:', error.message);\r\n} finally {\r\n  await dbConfig.closePool();\r\n  process.exit(0);\r\n}\r\n"
+        }
+    ]
+}

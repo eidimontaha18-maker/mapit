@@ -1,0 +1,18 @@
+{
+    "sourceFile": "test-db-import.js",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1760433095927,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1760433095927,
+            "name": "Commit-0",
+            "content": "/**\r\n * Test if db module can be imported\r\n */\r\n\r\nconsole.log('Testing db module import...');\r\n\r\ntry {\r\n  const db = await import('./src/db/dbOperations.js');\r\n  console.log('✅ Successfully imported db module');\r\n  console.log('   Exports:', Object.keys(db));\r\n  console.log('   Default export:', db.default ? 'Yes' : 'No');\r\n  \r\n  if (db.default) {\r\n    console.log('   Default keys:', Object.keys(db.default));\r\n  }\r\n  \r\n  // Test connection\r\n  if (db.default && db.default.testConnection) {\r\n    console.log('\\nTesting connection...');\r\n    const connected = await db.default.testConnection();\r\n    console.log('   Connection result:', connected);\r\n  }\r\n  \r\n  // Test listTables\r\n  if (db.default && db.default.listTables) {\r\n    console.log('\\nListing tables...');\r\n    const tables = await db.default.listTables();\r\n    console.log('   Tables:', tables);\r\n  }\r\n  \r\n} catch (err) {\r\n  console.error('❌ Error importing db module:', err);\r\n  console.error('Stack:', err.stack);\r\n}\r\n"
+        }
+    ]
+}

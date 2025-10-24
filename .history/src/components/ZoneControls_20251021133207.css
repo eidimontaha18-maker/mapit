@@ -1,0 +1,196 @@
+.zone-controls {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  z-index: 1000;
+  width: 300px;
+  max-width: calc(100vw - 40px);
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+}
+
+.map-info-section {
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #e8eaed;
+}
+
+.map-info-section h3 {
+  margin: 0 0 5px 0;
+  font-size: 18px;
+  color: #333;
+  font-weight: 600;
+}
+
+.map-code-display {
+  margin-top: 10px;
+}
+
+.map-code-display label {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.zone-controls h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 16px;
+  color: #333;
+}
+
+.zone-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.zone-form input {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.zone-form .color-picker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.zone-form .color-picker input[type="color"] {
+  width: 40px;
+  height: 30px;
+  padding: 0;
+  border: none;
+}
+
+.zone-form button {
+  padding: 8px 12px;
+  background-color: #4f8cff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  margin-top: 5px;
+}
+
+.zone-form button:hover {
+  background-color: #3a7aef;
+}
+
+.zone-form button.cancel {
+  background-color: #f44336;
+}
+
+.zone-form button.cancel:hover {
+  background-color: #d32f2f;
+}
+
+.zones-list {
+  margin-top: 15px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.zones-list h3 {
+  margin: 0 0 15px 0;
+  font-size: 16px;
+  color: #333;
+  font-weight: 600;
+}
+
+.zone-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.zone-item:last-child {
+  border-bottom: none;
+}
+
+.zone-color {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  margin-right: 10px;
+  border: 1px solid rgba(0,0,0,0.1);
+}
+
+.zone-name-color {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.zone-name-color span {
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
+}
+
+.zone-actions button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  color: #666;
+  padding: 4px 8px;
+  border-radius: 3px;
+  transition: all 0.2s ease;
+}
+
+.zone-actions button:hover {
+  color: #fff;
+  background-color: #f44336;
+}
+
+/* Save all zones button */
+.save-zones-container {
+  margin: 10px 0;
+  display: flex;
+  justify-content: center;
+}
+
+.save-all-zones-button {
+  background-color: #4caf50;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.3s ease;
+  width: 100%;
+}
+
+.save-all-zones-button:hover {
+  background-color: #45a049;
+}
+
+.draw-instructions {
+  margin-top: 10px;
+  padding: 8px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #666;
+}
+
+/* Zone tooltip styling */
+.zone-tooltip {
+  background-color: rgba(0, 0, 0, 0.8) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 4px !important;
+  padding: 4px 8px !important;
+  font-size: 12px !important;
+  font-weight: bold !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+}

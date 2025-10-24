@@ -1,0 +1,24 @@
+.admin-layout {
+  min-height: 100vh;
+  background: #f7fafc;
+}
+
+.admin-content {
+  transition: margin-left 0.3s ease;
+  min-height: 100vh;
+}
+
+.admin-content.sidebar-open {
+  margin-left: 260px;
+}
+
+.admin-content.sidebar-closed {
+  margin-left: 70px;
+}
+
+@media (max-width: 768px) {
+  .admin-content.sidebar-open,
+  .admin-content.sidebar-closed {
+    margin-left: 0;
+  }
+}

@@ -1,0 +1,18 @@
+{
+    "sourceFile": "simple-login-test.js",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1760431795800,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1760431795800,
+            "name": "Commit-0",
+            "content": "import fetch from 'node-fetch';\r\n\r\nasync function simpleLoginTest() {\r\n    const serverUrl = 'http://127.0.0.1:3101';\r\n    \r\n    console.log('🔍 Testing server connection...');\r\n    \r\n    // Wait a moment for server to be ready\r\n    await new Promise(resolve => setTimeout(resolve, 2000));\r\n    \r\n    try {\r\n        // Test health endpoint first\r\n        console.log('Testing health endpoint...');\r\n        const healthResponse = await fetch(`${serverUrl}/api/health`);\r\n        \r\n        if (healthResponse.ok) {\r\n            const healthData = await healthResponse.json();\r\n            console.log('✅ Server is healthy:', healthData);\r\n        } else {\r\n            console.log('❌ Health check failed:', healthResponse.status);\r\n            return;\r\n        }\r\n        \r\n        // Test login with Alice (base64 encoded password)\r\n        console.log('\\n🔐 Testing login with Alice...');\r\n        const loginData = {\r\n            email: 'alice@example.com',\r\n            password: 'Password123!'\r\n        };\r\n        \r\n        console.log('Sending login request:', loginData);\r\n        \r\n        const loginResponse = await fetch(`${serverUrl}/api/login`, {\r\n            method: 'POST',\r\n            headers: {\r\n                'Content-Type': 'application/json'\r\n            },\r\n            body: JSON.stringify(loginData)\r\n        });\r\n        \r\n        console.log('Response status:', loginResponse.status);\r\n        \r\n        const loginResult = await loginResponse.json();\r\n        console.log('Login result:', loginResult);\r\n        \r\n        if (loginResult.success) {\r\n            console.log('✅ Login successful!');\r\n            console.log('User info:', loginResult.user);\r\n        } else {\r\n            console.log('❌ Login failed:', loginResult.error);\r\n        }\r\n        \r\n    } catch (error) {\r\n        console.log('❌ Error:', error.message);\r\n    }\r\n}\r\n\r\nsimpleLoginTest();"
+        }
+    ]
+}

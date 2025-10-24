@@ -1,0 +1,18 @@
+{
+    "sourceFile": "vite.config.ts",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1760956320400,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1760956320400,
+            "name": "Commit-0",
+            "content": "import { defineConfig } from 'vite'\nimport react from '@vitejs/plugin-react'\n\n// https://vite.dev/config/\nexport default defineConfig({\n  plugins: [react()],\n  server: {\n    port: 5173,\n    proxy: {\n      '/api': {\n        target: 'http://127.0.0.1:3101',\n        changeOrigin: true,\n        secure: false,\n        // Allow websockets if later needed\n        ws: true,\n        // Configure rewrite to ensure proper path handling\n        rewrite: (path) => path,\n        // Add error handling and logging\n        configure: (proxy, _options) => {\n          proxy.on('error', (err, _req, _res) => {\n            console.log('❌ Proxy error:', err.message);\n          });\n          proxy.on('proxyReq', (proxyReq, req, _res) => {\n            console.log('🔄 Proxying:', req.method, req.url, '→', proxyReq.path);\n          });\n          proxy.on('proxyRes', (proxyRes, req, _res) => {\n            console.log('✅ Proxy response:', req.method, req.url, '→', proxyRes.statusCode);\n          });\n        }\n      }\n    },\n    cors: true\n  },\n  // For SPA routing to work\n  base: './'\n})\n"
+        }
+    ]
+}

@@ -1,0 +1,44 @@
+.app-navbar {
+  width: 100vw;
+  height: 64px;
+  background: linear-gradient(90deg, #4f8cff 0%, #a1e3ff 100%);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(79,140,255,0.08);
+}
+.app-navbar-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: 32px;
+}
+.app-navbar-title {
+  font-size: 1.5em;
+  color: #fff;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+.app-navbar-actions {
+  margin-right: 32px;
+}
+.app-navbar-logout {
+  background: #fff;
+  color: #4f8cff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 20px;
+  font-size: 1em;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(79,140,255,0.08);
+  transition: background 0.2s, color 0.2s;
+}
+.app-navbar-logout:hover {
+  background: #4f8cff;
+  color: #fff;
+}

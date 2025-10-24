@@ -1,0 +1,22 @@
+{
+    "sourceFile": "test-login-functionality.js",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 1,
+            "patches": [
+                {
+                    "date": 1760431595181,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1760431745487,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -4,14 +4,15 @@\n \r\n async function testLogin() {\r\n     console.log('🔐 Testing login functionality...\\n');\r\n     \r\n-    // Test with an existing customer from your database\r\n+    // Test with actual credentials from your database\r\n     const testCredentials = [\r\n-        { email: 'alice@example.com', password: 'password123' },\r\n-        { email: 'bob@example.com', password: 'password123' },\r\n-        { email: 'eidimontaha188@gmail.com', password: 'unknown' }, // This will likely fail\r\n-        { email: 'eidimontaha@gmail.com', password: 'password123' } // Try this format too\r\n+        { email: 'alice@example.com', password: 'Password123!' }, // Base64 encoded\r\n+        { email: 'bob@example.com', password: 'Password123!' }, // Base64 encoded\r\n+        { email: 'charlie@example.com', password: 'Password123!' }, // Base64 encoded\r\n+        { email: 'eidimontaha188@gmail.com', password: '123456' }, // Bcrypt hashed (guessing common password)\r\n+        { email: 'eidimontaha@gmail.com', password: 'Password123!' } // Wrong email format (should fail)\r\n     ];\r\n     \r\n     for (const credentials of testCredentials) {\r\n         console.log(`Testing login for: ${credentials.email}`);\r\n"
+                }
+            ],
+            "date": 1760431595181,
+            "name": "Commit-0",
+            "content": "import fetch from 'node-fetch';\r\n\r\nconst SERVER_URL = 'http://127.0.0.1:3101';\r\n\r\nasync function testLogin() {\r\n    console.log('🔐 Testing login functionality...\\n');\r\n    \r\n    // Test with an existing customer from your database\r\n    const testCredentials = [\r\n        { email: 'alice@example.com', password: 'password123' },\r\n        { email: 'bob@example.com', password: 'password123' },\r\n        { email: 'eidimontaha188@gmail.com', password: 'unknown' }, // This will likely fail\r\n        { email: 'eidimontaha@gmail.com', password: 'password123' } // Try this format too\r\n    ];\r\n    \r\n    for (const credentials of testCredentials) {\r\n        console.log(`Testing login for: ${credentials.email}`);\r\n        \r\n        try {\r\n            const response = await fetch(`${SERVER_URL}/api/login`, {\r\n                method: 'POST',\r\n                headers: {\r\n                    'Content-Type': 'application/json',\r\n                },\r\n                body: JSON.stringify(credentials)\r\n            });\r\n            \r\n            const result = await response.json();\r\n            \r\n            if (response.ok && result.success) {\r\n                console.log(`✅ Login successful!`);\r\n                console.log(`   User: ${result.user.first_name} ${result.user.last_name}`);\r\n                console.log(`   Customer ID: ${result.user.customer_id}`);\r\n            } else {\r\n                console.log(`❌ Login failed: ${result.error}`);\r\n            }\r\n            \r\n        } catch (error) {\r\n            console.log(`❌ Connection error: ${error.message}`);\r\n        }\r\n        \r\n        console.log(''); // Empty line for readability\r\n    }\r\n    \r\n    // Also test the server health\r\n    console.log('🏥 Testing server health...');\r\n    try {\r\n        const healthResponse = await fetch(`${SERVER_URL}/api/health`);\r\n        const healthData = await healthResponse.json();\r\n        \r\n        if (healthResponse.ok) {\r\n            console.log('✅ Server is healthy');\r\n            console.log(`   Database time: ${healthData.time}`);\r\n        } else {\r\n            console.log('❌ Server health check failed');\r\n        }\r\n    } catch (error) {\r\n        console.log(`❌ Cannot reach server: ${error.message}`);\r\n        console.log('💡 Make sure your server is running on port 3101');\r\n        console.log('   Run: npm run server or node server.js');\r\n    }\r\n}\r\n\r\ntestLogin();"
+        }
+    ]
+}

@@ -1,0 +1,18 @@
+{
+    "sourceFile": "create_admin_table.sql",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1761127347918,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1761127347918,
+            "name": "Commit-0",
+            "content": "-- Create admin table for admin dashboard access\r\nCREATE TABLE IF NOT EXISTS admin (\r\n    admin_id SERIAL PRIMARY KEY,\r\n    email VARCHAR(255) NOT NULL UNIQUE,\r\n    password_hash VARCHAR(255) NOT NULL,\r\n    first_name VARCHAR(100),\r\n    last_name VARCHAR(100),\r\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,\r\n    last_login TIMESTAMP WITH TIME ZONE\r\n);\r\n\r\n-- Create index for email lookups\r\nCREATE INDEX IF NOT EXISTS idx_admin_email ON admin(email);\r\n\r\n-- Add comment for documentation\r\nCOMMENT ON TABLE admin IS 'Stores admin credentials for accessing the admin dashboard';\r\n\r\n-- Insert a default admin (password: admin123)\r\n-- You should change this password after first login\r\nINSERT INTO admin (email, password_hash, first_name, last_name)\r\nVALUES ('admin@mapit.com', '$2b$10$YourHashedPasswordHere', 'Admin', 'User')\r\nON CONFLICT (email) DO NOTHING;\r\n"
+        }
+    ]
+}

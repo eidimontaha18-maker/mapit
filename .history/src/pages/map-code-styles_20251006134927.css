@@ -1,0 +1,35 @@
+.map-code-display {
+  margin: 5px 20px 10px;
+  padding: 8px 12px;
+  background-color: #f0f4ff;
+  border-radius: 4px;
+  border-left: 4px solid #4285F4;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.map-code-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #555;
+}
+
+.map-code-value {
+  font-family: monospace;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #4285F4;
+  letter-spacing: 1px;
+}
+
+.map-location {
+  margin: 0 20px 10px;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.location-label {
+  font-weight: 500;
+  margin-right: 5px;
+}

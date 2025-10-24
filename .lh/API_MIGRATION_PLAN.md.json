@@ -1,0 +1,18 @@
+{
+    "sourceFile": "API_MIGRATION_PLAN.md",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1760438405897,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1760438405897,
+            "name": "Commit-0",
+            "content": "# 🔧 API Endpoint Migration Plan\r\n\r\n## Issue\r\nFrontend is calling old `/api/db/tables/...` endpoints but backend only has new simplified endpoints.\r\n\r\n## Backend Endpoints (simple-login-server.js)\r\n✅ Available:\r\n- `GET /api/map/:map_id` - Get map by ID\r\n- `POST /api/map` - Create new map\r\n- `PUT /api/map/:map_id` - Update map\r\n- `GET /api/customer/:customer_id/maps` - Get customer maps\r\n- `GET /api/map/:map_id/zones` - Get zones for map\r\n- `POST /api/zone` - Create zone\r\n- `PUT /api/zone/:zone_id` - Update zone\r\n- `DELETE /api/zone/:zone_id` - Delete zone\r\n\r\n## Frontend Files to Update\r\n\r\n### ✅ FIXED:\r\n1. **MapPageWithSidebar.tsx**\r\n   - Changed: `/api/db/tables/map/${id}` → `/api/map/${id}`\r\n   - Changed: `/api/db/tables/zones?map_id=${id}` → `/api/map/${id}/zones`\r\n   - Changed: `data.record` → `data.map`\r\n   - Changed: `zonesData.records` → `zonesData.zones`\r\n\r\n### ⏳ NEED TO FIX:\r\n\r\n2. **DashboardPage.tsx** (Line 84)\r\n   - Need to change: `/api/db/tables/map/${id}` → `/api/map/${id}`\r\n   - This is for DELETE operation\r\n\r\n3. **CreateMapPage.tsx** (Lines 149-150, 311)\r\n   - Need to change: `/api/db/tables/map` → `/api/map`\r\n   - Need to change: `/api/db/tables/zones` → `/api/zone`\r\n   - Already partially correct API flow\r\n\r\n4. **WorldMap.tsx** (Multiple lines)\r\n   - Line 263: `/api/db/tables/zones?map_id=` → `/api/map/${mapId}/zones`\r\n   - Line 301: `/api/db/tables/map/${mapId}` → `/api/map/${mapId}`\r\n   - Line 375: `/api/db/tables/map/${mapId}` → `/api/map/${mapId}`\r\n   - Line 386: `/api/db/tables/zones` → `/api/zone`\r\n   - Line 473: `/api/db/tables/zones/${id}` → `/api/zone/${id}`\r\n   - Line 516: `/api/db/tables/zones/${zone.id}` → `/api/zone/${zone.id}`\r\n   - Line 641: `/api/db/tables/map/${mapId}` → `/api/map/${mapId}`\r\n\r\n## Migration Strategy\r\n\r\n1. ✅ Fix MapPageWithSidebar.tsx (DONE)\r\n2. Fix DashboardPage.tsx DELETE endpoint\r\n3. Fix CreateMapPage.tsx endpoints\r\n4. Fix WorldMap.tsx endpoints (most critical)\r\n\r\nAfter these fixes, map viewing should work correctly!\r\n"
+        }
+    ]
+}

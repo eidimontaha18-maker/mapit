@@ -1,0 +1,18 @@
+{
+    "sourceFile": "test-api-direct.js",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1760432480766,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1760432480766,
+            "name": "Commit-0",
+            "content": "/**\r\n * Test API endpoints directly\r\n */\r\n\r\nasync function testEndpoints() {\r\n  console.log('Testing API endpoints...\\n');\r\n  \r\n  // Test 1: Health check\r\n  try {\r\n    console.log('1. Testing /api/health...');\r\n    const healthRes = await fetch('http://localhost:3101/api/health');\r\n    const healthData = await healthRes.json();\r\n    console.log('   ✅ Health check:', healthData);\r\n  } catch (err) {\r\n    console.error('   ❌ Health check failed:', err.message);\r\n  }\r\n  \r\n  // Test 2: Login endpoint\r\n  try {\r\n    console.log('\\n2. Testing /api/login...');\r\n    const loginRes = await fetch('http://localhost:3101/api/login', {\r\n      method: 'POST',\r\n      headers: { 'Content-Type': 'application/json' },\r\n      body: JSON.stringify({ \r\n        email: 'test@example.com', \r\n        password: 'test123' \r\n      })\r\n    });\r\n    console.log('   Status:', loginRes.status);\r\n    const loginText = await loginRes.text();\r\n    console.log('   Response body:', loginText);\r\n    try {\r\n      const loginData = JSON.parse(loginText);\r\n      console.log('   Parsed:', loginData);\r\n    } catch (e) {\r\n      console.log('   Could not parse as JSON');\r\n    }\r\n  } catch (err) {\r\n    console.error('   ❌ Login test failed:', err.message);\r\n  }\r\n  \r\n  // Test 3: List tables\r\n  try {\r\n    console.log('\\n3. Testing /api/db/tables...');\r\n    const tablesRes = await fetch('http://localhost:3101/api/db/tables');\r\n    const tablesData = await tablesRes.json();\r\n    console.log('   ✅ Tables:', tablesData);\r\n  } catch (err) {\r\n    console.error('   ❌ Tables test failed:', err.message);\r\n  }\r\n  \r\n  // Test 4: Get maps with customer_id\r\n  try {\r\n    console.log('\\n4. Testing /api/db/tables/map?customer_id=17...');\r\n    const mapsRes = await fetch('http://localhost:3101/api/db/tables/map?customer_id=17');\r\n    console.log('   Status:', mapsRes.status);\r\n    const mapsText = await mapsRes.text();\r\n    console.log('   Response body:', mapsText);\r\n    try {\r\n      const mapsData = JSON.parse(mapsText);\r\n      console.log('   Parsed:', mapsData);\r\n    } catch (e) {\r\n      console.log('   Could not parse as JSON');\r\n    }\r\n  } catch (err) {\r\n    console.error('   ❌ Maps test failed:', err.message);\r\n  }\r\n}\r\n\r\ntestEndpoints();\r\n"
+        }
+    ]
+}

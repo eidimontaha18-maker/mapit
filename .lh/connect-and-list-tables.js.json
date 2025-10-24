@@ -1,0 +1,18 @@
+{
+    "sourceFile": "connect-and-list-tables.js",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1760430590482,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1760430590482,
+            "name": "Commit-0",
+            "content": "import pkg from 'pg';\r\nconst { Client } = pkg;\r\n\r\n// Database configuration from your postgrest.conf\r\nconst dbConfig = {\r\n    host: 'localhost',\r\n    port: 5432,\r\n    database: 'mapit',\r\n    user: 'postgres',\r\n    password: 'NewStrongPass123'\r\n};\r\n\r\nasync function connectAndListTables() {\r\n    const client = new Client(dbConfig);\r\n    \r\n    try {\r\n        console.log('Connecting to PostgreSQL database...');\r\n        await client.connect();\r\n        console.log('✅ Successfully connected to the database!');\r\n        \r\n        // Query to get all table names from the public schema\r\n        const query = `\r\n            SELECT table_name \r\n            FROM information_schema.tables \r\n            WHERE table_schema = 'public' \r\n            AND table_type = 'BASE TABLE'\r\n            ORDER BY table_name;\r\n        `;\r\n        \r\n        console.log('\\n📋 Listing all tables in the public schema:');\r\n        const result = await client.query(query);\r\n        \r\n        if (result.rows.length === 0) {\r\n            console.log('No tables found in the public schema.');\r\n        } else {\r\n            console.log(`Found ${result.rows.length} table(s):`);\r\n            result.rows.forEach((row, index) => {\r\n                console.log(`${index + 1}. ${row.table_name}`);\r\n            });\r\n        }\r\n        \r\n        // Also get some basic info about each table\r\n        console.log('\\n📊 Table information:');\r\n        for (const row of result.rows) {\r\n            const tableName = row.table_name;\r\n            const countQuery = `SELECT COUNT(*) as row_count FROM \"${tableName}\"`;\r\n            \r\n            try {\r\n                const countResult = await client.query(countQuery);\r\n                const rowCount = countResult.rows[0].row_count;\r\n                console.log(`   ${tableName}: ${rowCount} rows`);\r\n            } catch (error) {\r\n                console.log(`   ${tableName}: Error counting rows - ${error.message}`);\r\n            }\r\n        }\r\n        \r\n    } catch (error) {\r\n        console.error('❌ Error connecting to the database:', error.message);\r\n        console.error('Connection details used:');\r\n        console.error(`   Host: ${dbConfig.host}`);\r\n        console.error(`   Port: ${dbConfig.port}`);\r\n        console.error(`   Database: ${dbConfig.database}`);\r\n        console.error(`   User: ${dbConfig.user}`);\r\n    } finally {\r\n        await client.end();\r\n        console.log('\\n🔌 Database connection closed.');\r\n    }\r\n}\r\n\r\n// Run the function\r\nconnectAndListTables();"
+        }
+    ]
+}

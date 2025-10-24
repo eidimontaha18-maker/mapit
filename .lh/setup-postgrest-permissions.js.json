@@ -1,0 +1,18 @@
+{
+    "sourceFile": "setup-postgrest-permissions.js",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1760430708082,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1760430708082,
+            "name": "Commit-0",
+            "content": "import pkg from 'pg';\r\nconst { Client } = pkg;\r\n\r\nconst dbConfig = {\r\n    host: 'localhost',\r\n    port: 5432,\r\n    database: 'mapit',\r\n    user: 'postgres',\r\n    password: 'NewStrongPass123'\r\n};\r\n\r\nasync function checkAndCreateAnonRole() {\r\n    const client = new Client(dbConfig);\r\n    \r\n    try {\r\n        await client.connect();\r\n        console.log('✅ Connected to database');\r\n        \r\n        // Check if anon role exists\r\n        console.log('\\n🔍 Checking existing roles...');\r\n        const rolesQuery = \"SELECT rolname FROM pg_roles WHERE rolname IN ('anon', 'postgres');\";\r\n        const roles = await client.query(rolesQuery);\r\n        \r\n        console.log('Existing roles:');\r\n        roles.rows.forEach(row => console.log(`   - ${row.rolname}`));\r\n        \r\n        // Check if anon role exists\r\n        const anonExists = roles.rows.some(row => row.rolname === 'anon');\r\n        \r\n        if (!anonExists) {\r\n            console.log('\\n🔧 Creating anon role...');\r\n            await client.query('CREATE ROLE anon NOLOGIN;');\r\n            console.log('✅ anon role created');\r\n        } else {\r\n            console.log('\\n✅ anon role already exists');\r\n        }\r\n        \r\n        // Grant permissions to anon role for all tables\r\n        console.log('\\n🔐 Granting permissions to anon role...');\r\n        \r\n        const tables = ['customer', 'customer_map', 'map', 'zones'];\r\n        \r\n        for (const table of tables) {\r\n            try {\r\n                await client.query(`GRANT SELECT, INSERT, UPDATE, DELETE ON \"${table}\" TO anon;`);\r\n                console.log(`   ✅ Granted permissions on ${table}`);\r\n            } catch (error) {\r\n                console.log(`   ❌ Error granting permissions on ${table}: ${error.message}`);\r\n            }\r\n        }\r\n        \r\n        // Grant usage on sequences (for auto-increment fields)\r\n        console.log('\\n🔢 Granting sequence permissions...');\r\n        const sequencesQuery = `\r\n            SELECT sequence_name \r\n            FROM information_schema.sequences \r\n            WHERE sequence_schema = 'public';\r\n        `;\r\n        \r\n        const sequences = await client.query(sequencesQuery);\r\n        \r\n        for (const seq of sequences.rows) {\r\n            try {\r\n                await client.query(`GRANT USAGE, SELECT ON SEQUENCE \"${seq.sequence_name}\" TO anon;`);\r\n                console.log(`   ✅ Granted sequence permissions on ${seq.sequence_name}`);\r\n            } catch (error) {\r\n                console.log(`   ❌ Error granting sequence permissions: ${error.message}`);\r\n            }\r\n        }\r\n        \r\n        console.log('\\n🎉 Database permissions setup completed!');\r\n        \r\n    } catch (error) {\r\n        console.error('❌ Error:', error.message);\r\n    } finally {\r\n        await client.end();\r\n    }\r\n}\r\n\r\ncheckAndCreateAnonRole();"
+        }
+    ]
+}

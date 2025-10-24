@@ -1,0 +1,18 @@
+{
+    "sourceFile": "STATUS_SUMMARY.md",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1760436969178,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1760436969177,
+            "name": "Commit-0",
+            "content": "# ✅ SERVERS ARE NOW RUNNING!\r\n\r\n## Current Status\r\n\r\n### ✅ Backend API Server (Terminal 1)\r\n- **Status:** RUNNING\r\n- **URL:** http://127.0.0.1:3101\r\n- **File:** simple-login-server.js\r\n- **Handles:** Login, Register, and API endpoints\r\n\r\n### ✅ Frontend Vite Server (Terminal 2)\r\n- **Status:** RUNNING  \r\n- **URL:** http://localhost:5173\r\n- **Serves:** React application\r\n- **Proxy:** Forwards `/api/*` to backend at port 3101\r\n\r\n## How to Test Login\r\n\r\n1. **Open your browser** to: http://localhost:5173\r\n\r\n2. **Try logging in** with one of these test accounts:\r\n   - Email: `alice@example.com`\r\n   - Password: `Password123!`\r\n   \r\n   OR\r\n   \r\n   - Email: `bob@example.com`\r\n   - Password: `Password123!`\r\n\r\n3. The login should now work without the 500 error!\r\n\r\n## What Was the Problem?\r\n\r\nThe \"Login failed with status 500\" error occurred because:\r\n\r\n1. ❌ You were only running `npm run dev` (frontend only)\r\n2. ❌ The backend API server on port 3101 was NOT running\r\n3. ❌ When the frontend tried to POST to `/api/login`, there was no server to handle it\r\n4. ✅ Now BOTH servers are running and the proxy is working\r\n\r\n## Terminal Windows You Should Keep Open\r\n\r\n**Terminal 1 - Backend:**\r\n```\r\nPS C:\\Users\\user\\mapit> node simple-login-server.js\r\n✅ PostgreSQL connection successful\r\n✅ API server running on http://127.0.0.1:3101\r\n```\r\n\r\n**Terminal 2 - Frontend:**\r\n```\r\nPS C:\\Users\\user\\mapit> npm run dev\r\nROLLDOWN-VITE v7.1.12  ready in 974 ms\r\n➜  Local:   http://localhost:5173/\r\n```\r\n\r\n## Database Tables Confirmed\r\n\r\nYour PostgreSQL database at `localhost:5432/mapit` contains:\r\n- ✅ **customer** table (13 users)\r\n- ✅ **customer_map** table\r\n- ✅ **map** table  \r\n- ✅ **zones** table\r\n\r\n## PostgREST Configuration\r\n\r\nYour postgrest.conf is configured for:\r\n- Server: 127.0.0.1:3100\r\n- Database: postgres://postgres:NewStrongPass123@localhost:5432/mapit\r\n- Schemas: public\r\n- CORS: Allows localhost:5173\r\n\r\nNote: The Node.js backend (port 3101) is handling authentication, not PostgREST (port 3100).\r\n\r\n## Next Time You Start Development\r\n\r\nAlways run BOTH commands in separate terminals:\r\n\r\n```powershell\r\n# Terminal 1\r\nnode simple-login-server.js\r\n\r\n# Terminal 2  \r\nnpm run dev\r\n```\r\n\r\nOr create a script to run both together using `concurrently` package.\r\n\r\n---\r\n\r\n**Your application is now ready to use! Go to http://localhost:5173 and try logging in! 🎉**\r\n"
+        }
+    ]
+}

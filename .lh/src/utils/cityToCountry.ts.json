@@ -1,0 +1,18 @@
+{
+    "sourceFile": "src/utils/cityToCountry.ts",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1760958399063,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1760958399063,
+            "name": "Commit-0",
+            "content": "// Mapping of cities to their respective countries\r\nexport const CITY_TO_COUNTRY: Record<string, string> = {\r\n  // Lebanon\r\n  'Beirut': 'Lebanon',\r\n  'Tripoli': 'Lebanon',\r\n  'Sidon': 'Lebanon',\r\n  'Tyre': 'Lebanon',\r\n  'Baalbek': 'Lebanon',\r\n  \r\n  // Syria\r\n  'Damascus': 'Syria',\r\n  'Aleppo': 'Syria',\r\n  'Homs': 'Syria',\r\n  'Hama': 'Syria',\r\n  'Latakia': 'Syria',\r\n  'Raqqa': 'Syria',\r\n  'Deir ez-Zor': 'Syria',\r\n  'Idlib': 'Syria',\r\n  'Al-Hasakah': 'Syria',\r\n  'Daraa': 'Syria',\r\n  \r\n  // United Arab Emirates\r\n  'Dubai': 'United Arab Emirates',\r\n  'Abu Dhabi': 'United Arab Emirates',\r\n  'Sharjah': 'United Arab Emirates',\r\n  'Ajman': 'United Arab Emirates',\r\n  'Al Ain': 'United Arab Emirates',\r\n  'Ras Al Khaimah': 'United Arab Emirates',\r\n  'Fujairah': 'United Arab Emirates',\r\n  'Umm Al Quwain': 'United Arab Emirates',\r\n  \r\n  // Egypt\r\n  'Cairo': 'Egypt',\r\n  \r\n  // United States\r\n  'New York': 'United States',\r\n  \r\n  // United Kingdom\r\n  'London': 'United Kingdom',\r\n  \r\n  // France\r\n  'Paris': 'France',\r\n  \r\n  // Japan\r\n  'Tokyo': 'Japan',\r\n  \r\n  // Germany\r\n  'Berlin': 'Germany',\r\n  \r\n  // Canada\r\n  'Toronto': 'Canada',\r\n  \r\n  // Australia\r\n  'Sydney': 'Australia',\r\n  \r\n  // Russia\r\n  'Moscow': 'Russia',\r\n  \r\n  // Italy\r\n  'Rome': 'Italy',\r\n  \r\n  // Spain\r\n  'Madrid': 'Spain',\r\n  \r\n  // Turkey\r\n  'Istanbul': 'Turkey',\r\n  \r\n  // China\r\n  'Beijing': 'China',\r\n  \r\n  // India\r\n  'Delhi': 'India',\r\n  \r\n  // South Africa\r\n  'Johannesburg': 'South Africa',\r\n  \r\n  // Mexico\r\n  'Mexico City': 'Mexico',\r\n  \r\n  // Argentina\r\n  'Buenos Aires': 'Argentina',\r\n  \r\n  // Thailand\r\n  'Bangkok': 'Thailand',\r\n  \r\n  // Singapore\r\n  'Singapore': 'Singapore',\r\n};\r\n"
+        }
+    ]
+}
