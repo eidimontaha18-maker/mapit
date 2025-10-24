@@ -1,4 +1,4 @@
-// API endpoint for customer login
+// API endpoint for admin orders
 import pkg from 'pg';
 const { Pool } = pkg;
 
@@ -19,38 +19,29 @@ export default async function handler(req, res) {
     return;
   }
 
-  if (req.method !== 'POST') {
+  if (req.method !== 'GET') {
     return res.status(405).json({ success: false, error: 'Method not allowed' });
   }
 
-  const { email, password } = req.body;
-
-  if (!email || !password) {
-    return res.status(400).json({ success: false, error: 'Email and password required' });
-  }
-
   try {
-    const result = await pool.query(
-      'SELECT * FROM customers WHERE email = $1 AND password = $2',
-      [email, password]
-    );
+    const result = await pool.query(`
+      SELECT 
+        o.*,
+        c.name as customer_name,
+        c.email as customer_email,
+        p.name as package_name
+      FROM orders o
+      LEFT JOIN customers c ON o.customer_id = c.id
+      LEFT JOIN packages p ON o.package_id = p.id
+      ORDER BY o.created_at DESC
+    `);
 
-    if (result.rows.length === 0) {
-      return res.status(401).json({ success: false, error: 'Invalid credentials' });
-    }
-
-    const user = result.rows[0];
     return res.status(200).json({
       success: true,
-      user: {
-        customer_id: user.id,
-        id: user.id,
-        name: user.name,
-        email: user.email
-      }
+      orders: result.rows
     });
   } catch (error) {
-    console.error('Login error:', error);
+    console.error('Orders fetch error:', error);
     return res.status(500).json({ 
       success: false, 
       error: 'Server error',

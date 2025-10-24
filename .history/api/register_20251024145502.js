@@ -1,4 +1,4 @@
-// API endpoint for customer login
+// API endpoint for customer registration
 import pkg from 'pg';
 const { Pool } = pkg;
 
@@ -23,24 +23,31 @@ export default async function handler(req, res) {
     return res.status(405).json({ success: false, error: 'Method not allowed' });
   }
 
-  const { email, password } = req.body;
+  const { name, email, password, package_id } = req.body;
 
-  if (!email || !password) {
-    return res.status(400).json({ success: false, error: 'Email and password required' });
+  if (!name || !email || !password) {
+    return res.status(400).json({ success: false, error: 'Name, email, and password required' });
   }
 
   try {
-    const result = await pool.query(
-      'SELECT * FROM customers WHERE email = $1 AND password = $2',
-      [email, password]
+    // Check if email already exists
+    const existingUser = await pool.query(
+      'SELECT id FROM customers WHERE email = $1',
+      [email]
     );
 
-    if (result.rows.length === 0) {
-      return res.status(401).json({ success: false, error: 'Invalid credentials' });
+    if (existingUser.rows.length > 0) {
+      return res.status(409).json({ success: false, error: 'Email already registered' });
     }
 
+    // Insert new customer
+    const result = await pool.query(
+      'INSERT INTO customers (name, email, password, package_id, created_at) VALUES ($1, $2, $3, $4, NOW()) RETURNING id, name, email',
+      [name, email, password, package_id || 1]
+    );
+
     const user = result.rows[0];
-    return res.status(200).json({
+    return res.status(201).json({
       success: true,
       user: {
         customer_id: user.id,
@@ -50,7 +57,7 @@ export default async function handler(req, res) {
       }
     });
   } catch (error) {
-    console.error('Login error:', error);
+    console.error('Registration error:', error);
     return res.status(500).json({ 
       success: false, 
       error: 'Server error',

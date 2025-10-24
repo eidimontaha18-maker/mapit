@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 import type { ReactNode } from 'react';
 
 interface User {
@@ -13,7 +13,6 @@ interface AuthContextType {
   isLoggedIn: boolean;
   userId: number | null;
   userEmail: string | null;
-  user: User | null;
   login: (emailOrUser: string | User, password?: string) => Promise<boolean>;
   logout: () => void;
 }
@@ -24,10 +23,12 @@ const AuthContext = createContext<AuthContextType>({
   isLoggedIn: false,
   userId: null,
   userEmail: null,
-  user: null,
   login: async () => false,
   logout: () => {}
 });
+
+// Custom hook to use the auth context
+export const useAuth = () => useContext(AuthContext);
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -38,18 +39,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [userId, setUserId] = useState<number | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
-  const [user, setUser] = useState<User | null>(null);
 
   // Check if user is already logged in on component mount
   useEffect(() => {
     const storedUser = localStorage.getItem('mapit_user');
     if (storedUser) {
       try {
-        const userData = JSON.parse(storedUser);
+        const user = JSON.parse(storedUser);
         setIsAuthenticated(true);
-        setUserId(userData.id);
-        setUserEmail(userData.email);
-        setUser(userData);
+        setUserId(user.id);
+        setUserEmail(user.email);
       } catch (error) {
         console.error('Error parsing stored user data:', error);
         localStorage.removeItem('mapit_user');
@@ -62,18 +61,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       // If first parameter is a user object, use it directly
       if (typeof emailOrUser === 'object') {
-        const userData = emailOrUser;
+        const user = emailOrUser;
         setIsAuthenticated(true);
-        setUserId(userData.customer_id || userData.id);
-        setUserEmail(userData.email);
-        setUser(userData);
+        setUserId(user.customer_id || user.id);
+        setUserEmail(user.email);
         
         // Save user data to localStorage
         localStorage.setItem('mapit_user', JSON.stringify({
-          id: userData.customer_id || userData.id,
-          customer_id: userData.customer_id || userData.id,
-          email: userData.email,
-          name: userData.name
+          id: user.customer_id || user.id,
+          email: user.email,
+          name: user.name
         }));
         
         localStorage.setItem('mapit_logged_in', 'true');
@@ -101,20 +98,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const data = await response.json();
       
       if (data.success && data.user) {
-        const userData = {
-          id: data.user.customer_id || data.user.id,
-          customer_id: data.user.customer_id || data.user.id,
-          email: data.user.email,
-          name: data.user.name
-        };
-        
         setIsAuthenticated(true);
-        setUserId(userData.id);
-        setUserEmail(userData.email);
-        setUser(userData);
+        setUserId(data.user.customer_id || data.user.id);
+        setUserEmail(data.user.email);
         
         // Save user data to localStorage
-        localStorage.setItem('mapit_user', JSON.stringify(userData));
+        localStorage.setItem('mapit_user', JSON.stringify({
+          id: data.user.customer_id || data.user.id,
+          email: data.user.email,
+          name: data.user.name
+        }));
+        
         localStorage.setItem('mapit_logged_in', 'true');
         return true;
       } else {
@@ -132,7 +126,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsAuthenticated(false);
     setUserId(null);
     setUserEmail(null);
-    setUser(null);
     localStorage.removeItem('mapit_user');
     localStorage.setItem('mapit_logged_in', 'false');
   };
@@ -143,7 +136,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isLoggedIn: isAuthenticated,
     userId,
     userEmail,
-    user,
     login,
     logout
   };

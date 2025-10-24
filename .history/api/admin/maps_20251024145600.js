@@ -1,4 +1,4 @@
-// API endpoint for customer login
+// API endpoint for admin maps list
 import pkg from 'pg';
 const { Pool } = pkg;
 
@@ -19,38 +19,28 @@ export default async function handler(req, res) {
     return;
   }
 
-  if (req.method !== 'POST') {
+  if (req.method !== 'GET') {
     return res.status(405).json({ success: false, error: 'Method not allowed' });
   }
 
-  const { email, password } = req.body;
-
-  if (!email || !password) {
-    return res.status(400).json({ success: false, error: 'Email and password required' });
-  }
-
   try {
-    const result = await pool.query(
-      'SELECT * FROM customers WHERE email = $1 AND password = $2',
-      [email, password]
-    );
+    const result = await pool.query(`
+      SELECT 
+        m.*,
+        c.name as customer_name,
+        c.email as customer_email
+      FROM map m
+      LEFT JOIN customer_map cm ON m.id = cm.map_id
+      LEFT JOIN customers c ON cm.customer_id = c.id
+      ORDER BY m.created_at DESC
+    `);
 
-    if (result.rows.length === 0) {
-      return res.status(401).json({ success: false, error: 'Invalid credentials' });
-    }
-
-    const user = result.rows[0];
     return res.status(200).json({
       success: true,
-      user: {
-        customer_id: user.id,
-        id: user.id,
-        name: user.name,
-        email: user.email
-      }
+      maps: result.rows
     });
   } catch (error) {
-    console.error('Login error:', error);
+    console.error('Maps fetch error:', error);
     return res.status(500).json({ 
       success: false, 
       error: 'Server error',

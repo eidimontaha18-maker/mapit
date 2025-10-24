@@ -101,20 +101,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const data = await response.json();
       
       if (data.success && data.user) {
-        const userData = {
-          id: data.user.customer_id || data.user.id,
-          customer_id: data.user.customer_id || data.user.id,
-          email: data.user.email,
-          name: data.user.name
-        };
-        
         setIsAuthenticated(true);
-        setUserId(userData.id);
-        setUserEmail(userData.email);
-        setUser(userData);
+        setUserId(data.user.customer_id || data.user.id);
+        setUserEmail(data.user.email);
         
         // Save user data to localStorage
-        localStorage.setItem('mapit_user', JSON.stringify(userData));
+        localStorage.setItem('mapit_user', JSON.stringify({
+          id: data.user.customer_id || data.user.id,
+          email: data.user.email,
+          name: data.user.name
+        }));
+        
         localStorage.setItem('mapit_logged_in', 'true');
         return true;
       } else {
@@ -132,7 +129,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsAuthenticated(false);
     setUserId(null);
     setUserEmail(null);
-    setUser(null);
     localStorage.removeItem('mapit_user');
     localStorage.setItem('mapit_logged_in', 'false');
   };
@@ -143,7 +139,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isLoggedIn: isAuthenticated,
     userId,
     userEmail,
-    user,
     login,
     logout
   };

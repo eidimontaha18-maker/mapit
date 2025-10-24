@@ -132,7 +132,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsAuthenticated(false);
     setUserId(null);
     setUserEmail(null);
-    setUser(null);
     localStorage.removeItem('mapit_user');
     localStorage.setItem('mapit_logged_in', 'false');
   };
@@ -143,7 +142,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isLoggedIn: isAuthenticated,
     userId,
     userEmail,
-    user,
     login,
     logout
   };
