@@ -66,36 +66,36 @@ const apiRequest = async <T extends BaseApiResponse>(
 export const zoneApi = {
   // Get all zones for the current user
   getZones: async (): Promise<Zone[]> => {
-    const response = await apiRequest<ZonesResponse>('/zones');
+    const response = await apiRequest<Zone[]>('/zones');
     return response.zones || [];
   },
   
   // Get a specific zone
-  getZone: async (id: string): Promise<Zone | undefined> => {
-    const response = await apiRequest<ZoneResponse>(`/zones/${id}`);
+  getZone: async (id: string): Promise<Zone> => {
+    const response = await apiRequest<Zone>(`/zones/${id}`);
     return response.zone;
   },
   
   // Create a new zone
-  createZone: async (zone: Zone): Promise<Zone | undefined> => {
-    const response = await apiRequest<ZoneResponse>('/zones', 'POST', zone);
+  createZone: async (zone: Zone): Promise<Zone> => {
+    const response = await apiRequest<Zone>('/zones', 'POST', zone);
     return response.zone;
   },
   
   // Update an existing zone
-  updateZone: async (zone: Zone): Promise<Zone | undefined> => {
-    const response = await apiRequest<ZoneResponse>(`/zones/${zone.id}`, 'PUT', zone);
+  updateZone: async (zone: Zone): Promise<Zone> => {
+    const response = await apiRequest<Zone>(`/zones/${zone.id}`, 'PUT', zone);
     return response.zone;
   },
   
   // Delete a zone
   deleteZone: async (id: string): Promise<void> => {
-    await apiRequest<BaseApiResponse>(`/zones/${id}`, 'DELETE');
+    await apiRequest<void>(`/zones/${id}`, 'DELETE');
   },
   
   // Save all zones at once (replacing existing ones)
   saveZones: async (zones: Zone[]): Promise<void> => {
-    await apiRequest<BaseApiResponse>('/zones/bulk', 'POST', { zones });
+    await apiRequest<void>('/zones/bulk', 'POST', { zones });
   }
 };
 
