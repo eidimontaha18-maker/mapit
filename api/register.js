@@ -45,10 +45,13 @@ export default async function handler(req, res) {
       return res.status(409).json({ success: false, error: 'Email already registered' });
     }
 
-    // Insert new customer (using password_hash column with plain password for now)
+    // Encode password to base64 (to match existing customer records)
+    const encodedPassword = Buffer.from(password).toString('base64');
+
+    // Insert new customer
     const result = await pool.query(
       'INSERT INTO customer (first_name, last_name, email, password_hash, registration_date) VALUES ($1, $2, $3, $4, NOW()) RETURNING customer_id, first_name, last_name, email',
-      [first_name, last_name, email, password]
+      [first_name, last_name, email, encodedPassword]
     );
 
     const user = result.rows[0];

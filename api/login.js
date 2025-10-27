@@ -49,8 +49,11 @@ export default async function handler(req, res) {
 
     const user = result.rows[0];
     
-    // Check password (comparing with password_hash field)
-    if (user.password_hash !== password) {
+    // Check password (password_hash field contains base64 encoded password)
+    // Decode the stored password and compare with provided password
+    const storedPassword = Buffer.from(user.password_hash, 'base64').toString('utf-8');
+    
+    if (storedPassword !== password) {
       console.log('Invalid password');
       return res.status(401).json({ success: false, error: 'Invalid credentials' });
     }

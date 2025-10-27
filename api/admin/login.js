@@ -1,5 +1,7 @@
 // API endpoint for admin login
 import pkg from 'pg';
+import bcrypt from 'bcryptjs';
+
 const { Pool } = pkg;
 
 const pool = new Pool({
@@ -49,8 +51,10 @@ export default async function handler(req, res) {
 
     const admin = result.rows[0];
     
-    // Check password (comparing with password_hash field)
-    if (admin.password_hash !== password) {
+    // Check password using bcrypt (password_hash field contains bcrypt hash)
+    const passwordMatch = await bcrypt.compare(password, admin.password_hash);
+    
+    if (!passwordMatch) {
       console.log('Invalid password');
       return res.status(401).json({ success: false, error: 'Invalid credentials' });
     }
