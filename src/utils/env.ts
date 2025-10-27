@@ -8,8 +8,8 @@ export const isProduction = viteEnv.MODE === 'production';
 export const env = {
   isProduction,
   isDevelopment: !isProduction,
-  // Use VITE_API_URL if set, else default to 127.0.0.1:3101
-  apiUrl: viteEnv.VITE_API_URL || 'http://127.0.0.1:3101',
+  // In production (Vercel), use relative URLs. In dev, use localhost
+  apiUrl: isProduction ? '' : (viteEnv.VITE_API_URL || 'http://127.0.0.1:3101'),
 };
 
 // Convenience: return a list of candidate API bases to try in dev

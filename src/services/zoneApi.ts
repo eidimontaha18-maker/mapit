@@ -6,7 +6,8 @@
 
 import type { Zone } from '../types/zones';
 
-const API_URL = 'http://127.0.0.1:3101/api';
+// Use relative URL for Vercel deployment compatibility
+const API_URL = '/api';
 
 interface BaseApiResponse {
   success: boolean;

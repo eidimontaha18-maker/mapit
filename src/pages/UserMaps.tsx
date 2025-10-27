@@ -30,7 +30,7 @@ const UserMaps: React.FC = () => {
   useEffect(() => {
     const fetchMaps = async () => {
       try {
-  const response = await fetch('http://localhost:3000/api/db/tables/map?orderBy=created_at DESC');
+  const response = await fetch('/api/customer/maps');
         const data = await response.json();
         
         if (data.success) {
