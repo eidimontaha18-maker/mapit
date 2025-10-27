@@ -23,23 +23,33 @@ export default async function handler(req, res) {
     return res.status(405).json({ success: false, error: 'Method not allowed' });
   }
 
-  const { email, password } = req.body;
-
-  if (!email || !password) {
-    return res.status(400).json({ success: false, error: 'Email and password required' });
-  }
-
   try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ success: false, error: 'Email and password required' });
+    }
+
+    // Test database connection
+    console.log('Admin login - Testing database connection...');
+    await pool.query('SELECT 1');
+    console.log('Admin login - Database connected');
+
+    console.log('Attempting admin login for:', email);
+    
     const result = await pool.query(
       'SELECT * FROM admins WHERE email = $1 AND password = $2',
       [email, password]
     );
 
     if (result.rows.length === 0) {
+      console.log('No admin found with provided credentials');
       return res.status(401).json({ success: false, error: 'Invalid credentials' });
     }
 
     const admin = result.rows[0];
+    console.log('Admin found:', admin.id);
+    
     return res.status(200).json({
       success: true,
       admin: {
@@ -49,6 +59,11 @@ export default async function handler(req, res) {
     });
   } catch (error) {
     console.error('Admin login error:', error);
-    return res.status(500).json({ success: false, error: 'Server error' });
+    return res.status(500).json({ 
+      success: false, 
+      error: 'Server error',
+      message: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 }

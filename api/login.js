@@ -23,23 +23,33 @@ export default async function handler(req, res) {
     return res.status(405).json({ success: false, error: 'Method not allowed' });
   }
 
-  const { email, password } = req.body;
-
-  if (!email || !password) {
-    return res.status(400).json({ success: false, error: 'Email and password required' });
-  }
-
   try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ success: false, error: 'Email and password required' });
+    }
+
+    // Test database connection first
+    console.log('Testing database connection...');
+    await pool.query('SELECT 1');
+    console.log('Database connected successfully');
+
+    console.log('Attempting login for:', email);
+    
     const result = await pool.query(
       'SELECT * FROM customers WHERE email = $1 AND password = $2',
       [email, password]
     );
 
     if (result.rows.length === 0) {
+      console.log('No user found with provided credentials');
       return res.status(401).json({ success: false, error: 'Invalid credentials' });
     }
 
     const user = result.rows[0];
+    console.log('User found:', user.id);
+    
     return res.status(200).json({
       success: true,
       user: {
@@ -54,7 +64,8 @@ export default async function handler(req, res) {
     return res.status(500).json({ 
       success: false, 
       error: 'Server error',
-      message: error.message 
+      message: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 }
