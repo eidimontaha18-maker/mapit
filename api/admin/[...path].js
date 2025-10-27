@@ -23,6 +23,9 @@ export default async function handler(req, res) {
   const { path } = req.query;
 
   try {
+    // Debug logging
+    console.log('[Admin API] Method:', req.method, 'Path:', path);
+
     // Route: /api/admin/login
     if (!path || (Array.isArray(path) && path[0] === 'login')) {
       if (req.method !== 'POST') {
@@ -128,7 +131,12 @@ export default async function handler(req, res) {
       return res.status(200).json({ success: true, orders: result.rows });
     }
 
-    return res.status(404).json({ success: false, error: 'Route not found' });
+    console.log('[Admin API] No route matched. Path:', path);
+    return res.status(404).json({ 
+      success: false, 
+      error: 'Route not found',
+      debug: { path, method: req.method }
+    });
 
   } catch (error) {
     console.error('Admin API error:', error);
