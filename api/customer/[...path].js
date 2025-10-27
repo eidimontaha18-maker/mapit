@@ -23,7 +23,7 @@ export default async function handler(req, res) {
   
   try {
     // Route: /api/customer/maps - Get all customer maps
-    if (!path || path[0] === 'maps') {
+    if (!path || (Array.isArray(path) && path[0] === 'maps')) {
       if (req.method !== 'GET') {
         return res.status(405).json({ success: false, error: 'Method not allowed' });
       }
@@ -42,7 +42,7 @@ export default async function handler(req, res) {
     }
 
     // Route: /api/customer/[id]/maps - Get specific customer's maps
-    if (path.length === 2 && path[1] === 'maps') {
+    if (Array.isArray(path) && path.length === 2 && path[1] === 'maps') {
       if (req.method !== 'GET') {
         return res.status(405).json({ success: false, error: 'Method not allowed' });
       }
@@ -64,7 +64,7 @@ export default async function handler(req, res) {
     }
 
     // Route: /api/customer/[id]/package - Get customer's package info
-    if (path.length === 2 && path[1] === 'package') {
+    if (Array.isArray(path) && path.length === 2 && path[1] === 'package') {
       if (req.method !== 'GET') {
         return res.status(405).json({ success: false, error: 'Method not allowed' });
       }

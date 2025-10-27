@@ -23,7 +23,7 @@ export default async function handler(req, res) {
 
   try {
     // Route: /api/zones/bulk - Bulk save zones
-    if (path && path[0] === 'bulk') {
+    if (Array.isArray(path) && path[0] === 'bulk') {
       if (req.method !== 'POST') {
         return res.status(405).json({ success: false, error: 'Method not allowed' });
       }
@@ -69,7 +69,7 @@ export default async function handler(req, res) {
     }
 
     // Route: /api/zones/[id] - Get, Update, or Delete specific zone
-    if (path && path.length === 1) {
+    if (Array.isArray(path) && path.length === 1 && path[0] !== 'bulk') {
       const zoneId = path[0];
 
       if (req.method === 'GET') {

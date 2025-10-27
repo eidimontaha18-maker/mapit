@@ -24,7 +24,7 @@ export default async function handler(req, res) {
 
   try {
     // Route: /api/admin/login
-    if (!path || path[0] === 'login') {
+    if (!path || (Array.isArray(path) && path[0] === 'login')) {
       if (req.method !== 'POST') {
         return res.status(405).json({ success: false, error: 'Method not allowed' });
       }
@@ -64,7 +64,7 @@ export default async function handler(req, res) {
     }
 
     // Route: /api/admin/stats
-    if (path[0] === 'stats') {
+    if (Array.isArray(path) && path[0] === 'stats') {
       if (req.method !== 'GET') {
         return res.status(405).json({ success: false, error: 'Method not allowed' });
       }
@@ -88,7 +88,7 @@ export default async function handler(req, res) {
     }
 
     // Route: /api/admin/maps
-    if (path[0] === 'maps') {
+    if (Array.isArray(path) && path[0] === 'maps') {
       if (req.method !== 'GET') {
         return res.status(405).json({ success: false, error: 'Method not allowed' });
       }
@@ -108,7 +108,7 @@ export default async function handler(req, res) {
     }
 
     // Route: /api/admin/orders
-    if (path[0] === 'orders') {
+    if (Array.isArray(path) && path[0] === 'orders') {
       if (req.method !== 'GET') {
         return res.status(405).json({ success: false, error: 'Method not allowed' });
       }
