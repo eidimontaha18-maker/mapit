@@ -26,10 +26,10 @@ export default async function handler(req, res) {
   try {
     // Get various statistics
     const [customers, maps, orders, revenue] = await Promise.all([
-      pool.query('SELECT COUNT(*) as count FROM customers'),
+      pool.query('SELECT COUNT(*) as count FROM customer'),
       pool.query('SELECT COUNT(*) as count FROM map'),
       pool.query('SELECT COUNT(*) as count FROM orders'),
-      pool.query('SELECT SUM(amount) as total FROM orders WHERE status = $1', ['completed'])
+      pool.query('SELECT SUM(total) as total FROM orders WHERE status = $1', ['completed'])
     ]);
 
     return res.status(200).json({

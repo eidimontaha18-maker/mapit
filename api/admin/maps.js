@@ -26,12 +26,17 @@ export default async function handler(req, res) {
   try {
     const result = await pool.query(`
       SELECT 
-        m.*,
-        c.name as customer_name,
+        m.map_id,
+        m.title,
+        m.description,
+        m.created_at,
+        m.country,
+        m.active,
+        m.customer_id,
+        c.first_name || ' ' || c.last_name as customer_name,
         c.email as customer_email
       FROM map m
-      LEFT JOIN customer_map cm ON m.id = cm.map_id
-      LEFT JOIN customers c ON cm.customer_id = c.id
+      LEFT JOIN customer c ON m.customer_id = c.customer_id
       ORDER BY m.created_at DESC
     `);
 
