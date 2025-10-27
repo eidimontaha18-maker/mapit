@@ -1,8 +1,9 @@
 /**
- * Centralized Database Configuration
+ * Centralized Database Configuration - Neon PostgreSQL
  * 
  * This file provides a single source of truth for database configuration
- * across the entire application. Import this file wherever you need DB config.
+ * across the entire application. All API endpoints use the Neon database
+ * directly via the pg Pool connection.
  */
 
 import dotenv from 'dotenv';
@@ -13,35 +14,20 @@ const { Pool } = pg;
 // Load environment variables
 dotenv.config();
 
-// Database configuration object
+// Neon Database configuration
 export const dbConfig = {
-  host: process.env.DB_HOST || '127.0.0.1',
-  port: parseInt(process.env.DB_PORT || '5432'),
-  database: process.env.DB_NAME || 'mapit',
-  user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD || 'NewStrongPass123',
+  // Primary connection method - use DATABASE_URL from .env
+  connectionString: process.env.DATABASE_URL,
   
-  // Connection string (alternative to individual params)
-  connectionString: process.env.DATABASE_URL || 'postgres://postgres:NewStrongPass123@localhost:5432/mapit',
-  
-  // SSL configuration for cloud databases (e.g., Neon)
-  ssl: process.env.DATABASE_URL?.includes('sslmode=require') ? {
+  // SSL is required for Neon
+  ssl: {
     rejectUnauthorized: false // Required for Neon and other cloud providers
-  } : false,
+  },
   
   // Connection pool settings
   max: 20, // Maximum number of clients in the pool
   idleTimeoutMillis: 30000, // How long a client is allowed to remain idle before being closed
-  connectionTimeoutMillis: 2000, // How long to wait for a connection
-};
-
-// PostgREST configuration
-export const postgrestConfig = {
-  host: process.env.POSTGREST_HOST || '127.0.0.1',
-  port: parseInt(process.env.POSTGREST_PORT || '3100'),
-  dbUri: process.env.POSTGREST_DB_URI || process.env.DATABASE_URL,
-  dbSchemas: process.env.POSTGREST_DB_SCHEMAS || 'public',
-  dbAnonRole: process.env.POSTGREST_DB_ANON_ROLE || 'anon',
+  connectionTimeoutMillis: 5000, // How long to wait for a connection
 };
 
 // CORS configuration
@@ -55,6 +41,8 @@ export const corsConfig = {
     'http://127.0.0.1:5174',
     'http://localhost:5175',
     'http://127.0.0.1:5175',
+    'http://localhost:3101',
+    'http://127.0.0.1:3101',
   ],
   maxAge: parseInt(process.env.CORS_MAX_AGE || '86400'),
 };
@@ -98,7 +86,6 @@ export async function closePool() {
 // Export default configuration object
 export default {
   db: dbConfig,
-  postgrest: postgrestConfig,
   cors: corsConfig,
   pool,
   testConnection,
