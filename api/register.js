@@ -25,19 +25,29 @@ export default async function handler(req, res) {
     return res.status(405).json({ success: false, error: 'Method not allowed' });
   }
 
-  const { name, email, password, package_id } = req.body;
+  const {  first_name, last_name, email, password, package_id } = req.body;
 
-  if (!name || !email || !password) {
-    return res.status(400).json({ success: false, error: 'Name, email, and password required' });
+  // Handle both name formats: single "name" field or separate "first_name"/"last_name"
+  let firstName, lastName;
+  
+  if (first_name && last_name) {
+    // Form sends first_name and last_name separately
+    firstName = first_name;
+    lastName = last_name;
+  } else if (name) {
+    // Legacy format with single name field
+    const nameParts = name.trim().split(' ');
+    firstName = nameParts[0];
+    lastName = nameParts.slice(1).join(' ') || '';
+  } else {
+    return res.status(400).json({ success: false, error: 'Name (or first_name/last_name) required' });
+  }
+
+  if (!email || !password) {
+    return res.status(400).json({ success: false, error: 'Email and password required' });
   }
 
   try {
-    // Split name into first_name and last_name
-    const nameParts = name.trim().split(' ');
-    const first_name = nameParts[0];
-    const last_name = nameParts.slice(1).join(' ') || '';
-
-    // Check if email already exists
     const existingUser = await pool.query(
       'SELECT customer_id FROM customer WHERE email = $1',
       [email]
@@ -53,7 +63,7 @@ export default async function handler(req, res) {
     // Insert new customer
     const result = await pool.query(
       'INSERT INTO customer (first_name, last_name, email, password_hash, registration_date) VALUES ($1, $2, $3, $4, NOW()) RETURNING customer_id, first_name, last_name, email',
-      [first_name, last_name, email, hashedPassword]
+      [firstName, lastName, email, hashedPassword]
     );
 
     const user = result.rows[0];
