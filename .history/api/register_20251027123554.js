@@ -25,10 +25,26 @@ export default async function handler(req, res) {
     return res.status(405).json({ success: false, error: 'Method not allowed' });
   }
 
-  const { first_name, last_name, email, password, package_id } = req.body;
+  const { name, first_name, last_name, email, password, package_id } = req.body;
 
-  if (!first_name || !last_name || !email || !password) {
-    return res.status(400).json({ success: false, error: 'First name, last name, email, and password required' });
+  // Handle both name formats: single "name" field or separate "first_name"/"last_name"
+  let firstName, lastName;
+  
+  if (first_name && last_name) {
+    // Form sends first_name and last_name separately
+    firstName = first_name;
+    lastName = last_name;
+  } else if (name) {
+    // Legacy format with single name field
+    const nameParts = name.trim().split(' ');
+    firstName = nameParts[0];
+    lastName = nameParts.slice(1).join(' ') || '';
+  } else {
+    return res.status(400).json({ success: false, error: 'Name (or first_name/last_name) required' });
+  }
+
+  if (!email || !password) {
+    return res.status(400).json({ success: false, error: 'Email and password required' });
   }
 
   try {

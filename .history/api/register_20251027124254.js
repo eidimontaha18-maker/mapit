@@ -47,7 +47,7 @@ export default async function handler(req, res) {
     // Insert new customer
     const result = await pool.query(
       'INSERT INTO customer (first_name, last_name, email, password_hash, registration_date) VALUES ($1, $2, $3, $4, NOW()) RETURNING customer_id, first_name, last_name, email',
-      [first_name, last_name, email, hashedPassword]
+      [firstName, lastName, email, hashedPassword]
     );
 
     const user = result.rows[0];

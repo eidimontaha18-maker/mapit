@@ -1,7 +1,5 @@
-// API endpoint for customer registration
+// API endpoint for customer login
 import pkg from 'pg';
-import bcrypt from 'bcryptjs';
-
 const { Pool } = pkg;
 
 const pool = new Pool({
@@ -25,33 +23,40 @@ export default async function handler(req, res) {
     return res.status(405).json({ success: false, error: 'Method not allowed' });
   }
 
-  const { first_name, last_name, email, password, package_id } = req.body;
-
-  if (!first_name || !last_name || !email || !password) {
-    return res.status(400).json({ success: false, error: 'First name, last name, email, and password required' });
-  }
-
   try {
-    const existingUser = await pool.query(
-      'SELECT customer_id FROM customer WHERE email = $1',
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ success: false, error: 'Email and password required' });
+    }
+
+    // Test database connection first
+    console.log('Testing database connection...');
+    await pool.query('SELECT 1');
+    console.log('Database connected successfully');
+
+    console.log('Attempting login for:', email);
+    
+    const result = await pool.query(
+      'SELECT customer_id, email, first_name, last_name, password_hash FROM customer WHERE email = $1',
       [email]
     );
 
-    if (existingUser.rows.length > 0) {
-      return res.status(409).json({ success: false, error: 'Email already registered' });
+    if (result.rows.length === 0) {
+      console.log('No user found with provided credentials');
+      return res.status(401).json({ success: false, error: 'Invalid credentials' });
     }
 
-    // Hash password using bcrypt (more secure than base64)
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Insert new customer
-    const result = await pool.query(
-      'INSERT INTO customer (first_name, last_name, email, password_hash, registration_date) VALUES ($1, $2, $3, $4, NOW()) RETURNING customer_id, first_name, last_name, email',
-      [first_name, last_name, email, hashedPassword]
-    );
-
     const user = result.rows[0];
-    return res.status(201).json({
+    
+    // Check password (comparing with password_hash field)
+    if (user.password_hash !== password) {
+      console.log('Invalid password');
+      return res.status(401).json({ success: false, error: 'Invalid credentials' });
+    }
+    console.log('User found:', user.customer_id);
+    
+    return res.status(200).json({
       success: true,
       user: {
         customer_id: user.customer_id,
@@ -62,11 +67,12 @@ export default async function handler(req, res) {
       }
     });
   } catch (error) {
-    console.error('Registration error:', error);
+    console.error('Login error:', error);
     return res.status(500).json({ 
       success: false, 
       error: 'Server error',
-      message: error.message 
+      message: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 }

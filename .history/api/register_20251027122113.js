@@ -25,13 +25,19 @@ export default async function handler(req, res) {
     return res.status(405).json({ success: false, error: 'Method not allowed' });
   }
 
-  const { first_name, last_name, email, password, package_id } = req.body;
+  const { name, email, password, package_id } = req.body;
 
-  if (!first_name || !last_name || !email || !password) {
-    return res.status(400).json({ success: false, error: 'First name, last name, email, and password required' });
+  if (!name || !email || !password) {
+    return res.status(400).json({ success: false, error: 'Name, email, and password required' });
   }
 
   try {
+    // Split name into first_name and last_name
+    const nameParts = name.trim().split(' ');
+    const first_name = nameParts[0];
+    const last_name = nameParts.slice(1).join(' ') || '';
+
+    // Check if email already exists
     const existingUser = await pool.query(
       'SELECT customer_id FROM customer WHERE email = $1',
       [email]
