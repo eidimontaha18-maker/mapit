@@ -1,4 +1,4 @@
-// API endpoint for individual map operations (GET, PUT, DELETE)
+// Consolidated Maps API - handles all map operations
 import pkg from 'pg';
 const { Pool } = pkg;
 
@@ -20,13 +20,6 @@ export default async function handler(req, res) {
   }
 
   const { id } = req.query;
-
-  if (!id) {
-    return res.status(400).json({ 
-      success: false, 
-      error: 'Map ID is required' 
-    });
-  }
 
   try {
     if (req.method === 'GET') {
@@ -68,17 +61,27 @@ export default async function handler(req, res) {
 
     if (req.method === 'PUT') {
       // Update map
-      const { title, description, country, active } = req.body;
+      const { title, description, country, active, map_data, map_bounds } = req.body;
 
       const result = await pool.query(
         `UPDATE map 
          SET title = COALESCE($1, title),
              description = COALESCE($2, description),
              country = COALESCE($3, country),
-             active = COALESCE($4, active)
-         WHERE map_id = $5
+             active = COALESCE($4, active),
+             map_data = COALESCE($5, map_data),
+             map_bounds = COALESCE($6, map_bounds)
+         WHERE map_id = $7
          RETURNING *`,
-        [title || null, description || null, country || null, active, id]
+        [
+          title || null, 
+          description || null, 
+          country || null, 
+          active !== undefined ? active : null,
+          map_data ? JSON.stringify(map_data) : null,
+          map_bounds ? JSON.stringify(map_bounds) : null,
+          id
+        ]
       );
 
       if (result.rows.length === 0) {
@@ -90,7 +93,8 @@ export default async function handler(req, res) {
 
       return res.status(200).json({ 
         success: true, 
-        map: result.rows[0] 
+        map: result.rows[0],
+        message: 'Map updated successfully'
       });
     }
 
@@ -103,6 +107,9 @@ export default async function handler(req, res) {
         
         // Delete zones first
         await client.query('DELETE FROM zones WHERE map_id = $1', [id]);
+        
+        // Delete customer_map relationships
+        await client.query('DELETE FROM customer_map WHERE map_id = $1', [id]);
         
         // Delete map
         const result = await client.query(
@@ -122,7 +129,7 @@ export default async function handler(req, res) {
 
         return res.status(200).json({ 
           success: true, 
-          message: 'Map and associated zones deleted successfully' 
+          message: 'Map and associated data deleted successfully' 
         });
 
       } catch (error) {
