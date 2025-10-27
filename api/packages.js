@@ -25,7 +25,7 @@ export default async function handler(req, res) {
 
   try {
     const result = await pool.query(
-      'SELECT * FROM packages ORDER BY id ASC'
+      'SELECT package_id as id, name, price, allowed_maps, priority, active FROM packages ORDER BY package_id ASC'
     );
 
     return res.status(200).json({
