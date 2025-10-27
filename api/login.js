@@ -1,5 +1,7 @@
 // API endpoint for customer login
 import pkg from 'pg';
+import bcrypt from 'bcryptjs';
+
 const { Pool } = pkg;
 
 const pool = new Pool({
@@ -49,11 +51,25 @@ export default async function handler(req, res) {
 
     const user = result.rows[0];
     
-    // Check password (password_hash field contains base64 encoded password)
-    // Decode the stored password and compare with provided password
-    const storedPassword = Buffer.from(user.password_hash, 'base64').toString('utf-8');
+    // Check password - handle both bcrypt and base64 formats
+    let passwordMatch = false;
     
-    if (storedPassword !== password) {
+    // Check if it's a bcrypt hash (starts with $2b$ or $2a$)
+    if (user.password_hash.startsWith('$2b$') || user.password_hash.startsWith('$2a$')) {
+      // Use bcrypt comparison
+      passwordMatch = await bcrypt.compare(password, user.password_hash);
+    } else {
+      // Try base64 decode
+      try {
+        const storedPassword = Buffer.from(user.password_hash, 'base64').toString('utf-8');
+        passwordMatch = (storedPassword === password);
+      } catch (e) {
+        // If base64 fails, try direct comparison
+        passwordMatch = (user.password_hash === password);
+      }
+    }
+    
+    if (!passwordMatch) {
       console.log('Invalid password');
       return res.status(401).json({ success: false, error: 'Invalid credentials' });
     }
