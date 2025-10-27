@@ -3,7 +3,7 @@
 ## 🔐 Admin Login
 
 **Email:** `admin@mapit.com`
-**Password:** `admin123`
+**Password:** `123456`
 
 Access at: `/admin`
 
