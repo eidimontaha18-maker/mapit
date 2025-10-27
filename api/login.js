@@ -38,8 +38,8 @@ export default async function handler(req, res) {
     console.log('Attempting login for:', email);
     
     const result = await pool.query(
-      'SELECT * FROM customers WHERE email = $1 AND password = $2',
-      [email, password]
+      'SELECT customer_id, email, first_name, last_name, password_hash FROM customer WHERE email = $1',
+      [email]
     );
 
     if (result.rows.length === 0) {
@@ -48,14 +48,21 @@ export default async function handler(req, res) {
     }
 
     const user = result.rows[0];
-    console.log('User found:', user.id);
+    
+    // Check password (comparing with password_hash field)
+    if (user.password_hash !== password) {
+      console.log('Invalid password');
+      return res.status(401).json({ success: false, error: 'Invalid credentials' });
+    }
+    console.log('User found:', user.customer_id);
     
     return res.status(200).json({
       success: true,
       user: {
-        customer_id: user.id,
-        id: user.id,
-        name: user.name,
+        customer_id: user.customer_id,
+        id: user.customer_id,
+        first_name: user.first_name,
+        last_name: user.last_name,
         email: user.email
       }
     });

@@ -30,9 +30,14 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Split name into first_name and last_name
+    const nameParts = name.trim().split(' ');
+    const first_name = nameParts[0];
+    const last_name = nameParts.slice(1).join(' ') || '';
+
     // Check if email already exists
     const existingUser = await pool.query(
-      'SELECT id FROM customers WHERE email = $1',
+      'SELECT customer_id FROM customer WHERE email = $1',
       [email]
     );
 
@@ -40,19 +45,20 @@ export default async function handler(req, res) {
       return res.status(409).json({ success: false, error: 'Email already registered' });
     }
 
-    // Insert new customer
+    // Insert new customer (using password_hash column with plain password for now)
     const result = await pool.query(
-      'INSERT INTO customers (name, email, password, package_id, created_at) VALUES ($1, $2, $3, $4, NOW()) RETURNING id, name, email',
-      [name, email, password, package_id || 1]
+      'INSERT INTO customer (first_name, last_name, email, password_hash, registration_date) VALUES ($1, $2, $3, $4, NOW()) RETURNING customer_id, first_name, last_name, email',
+      [first_name, last_name, email, password]
     );
 
     const user = result.rows[0];
     return res.status(201).json({
       success: true,
       user: {
-        customer_id: user.id,
-        id: user.id,
-        name: user.name,
+        customer_id: user.customer_id,
+        id: user.customer_id,
+        first_name: user.first_name,
+        last_name: user.last_name,
         email: user.email
       }
     });

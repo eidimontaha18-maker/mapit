@@ -38,8 +38,8 @@ export default async function handler(req, res) {
     console.log('Attempting admin login for:', email);
     
     const result = await pool.query(
-      'SELECT * FROM admins WHERE email = $1 AND password = $2',
-      [email, password]
+      'SELECT admin_id, email, first_name, last_name, password_hash FROM admin WHERE email = $1',
+      [email]
     );
 
     if (result.rows.length === 0) {
@@ -48,13 +48,28 @@ export default async function handler(req, res) {
     }
 
     const admin = result.rows[0];
-    console.log('Admin found:', admin.id);
+    
+    // Check password (comparing with password_hash field)
+    if (admin.password_hash !== password) {
+      console.log('Invalid password');
+      return res.status(401).json({ success: false, error: 'Invalid credentials' });
+    }
+    console.log('Admin found:', admin.admin_id);
+    
+    // Update last_login
+    await pool.query(
+      'UPDATE admin SET last_login = NOW() WHERE admin_id = $1',
+      [admin.admin_id]
+    );
     
     return res.status(200).json({
       success: true,
       admin: {
-        id: admin.id,
-        email: admin.email
+        id: admin.admin_id,
+        admin_id: admin.admin_id,
+        email: admin.email,
+        first_name: admin.first_name,
+        last_name: admin.last_name
       }
     });
   } catch (error) {
