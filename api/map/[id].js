@@ -41,14 +41,23 @@ export default async function handler(req, res) {
       }
 
       if (req.method === 'POST') {
-        const { title, description, country, customer_id, active } = req.body;
+        const { title, description, country, customer_id, active, map_code, map_data, map_bounds } = req.body;
         if (!title || !customer_id) {
           return res.status(400).json({ success: false, error: 'Title and customer_id are required' });
         }
         const result = await pool.query(
-          `INSERT INTO map (title, description, country, customer_id, active, created_at) 
-           VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING *`,
-          [title, description || '', country || '', customer_id, active !== false]
+          `INSERT INTO map (title, description, country, customer_id, active, map_code, map_data, map_bounds, created_at) 
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW()) RETURNING *`,
+          [
+            title, 
+            description || '', 
+            country || null, 
+            customer_id, 
+            active !== false, 
+            map_code || null,
+            map_data ? JSON.stringify(map_data) : JSON.stringify({ lat: 20, lng: 0, zoom: 2 }),
+            map_bounds ? JSON.stringify(map_bounds) : JSON.stringify({ center: [20, 0], zoom: 2 })
+          ]
         );
         return res.status(201).json({ success: true, map: result.rows[0] });
       }
