@@ -37,7 +37,7 @@ export default async function handler(req, res) {
         c.last_name,
         c.email,
         p.name as package_name,
-        p.maps_allowed,
+        p.allowed_maps,
         p.price
       FROM orders o
       LEFT JOIN customer c ON o.customer_id = c.customer_id
