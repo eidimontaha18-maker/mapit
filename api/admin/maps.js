@@ -27,20 +27,30 @@ export default async function handler(req, res) {
     const result = await pool.query(`
       SELECT 
         m.map_id,
-        m.map_name,
-        m.customer_id,
+        m.title,
+        m.description,
+        m.map_code,
         m.created_at,
+        m.active,
+        m.country,
+        m.customer_id,
         c.first_name,
         c.last_name,
-        c.email
+        c.email,
+        c.registration_date,
+        COUNT(z.id) as zone_count
       FROM map m
       LEFT JOIN customer c ON m.customer_id = c.customer_id
+      LEFT JOIN zones z ON m.map_id = z.map_id
+      GROUP BY m.map_id, m.title, m.description, m.map_code, m.created_at, m.active, m.country, 
+               m.customer_id, c.first_name, c.last_name, c.email, c.registration_date
       ORDER BY m.created_at DESC
     `);
 
     return res.status(200).json({
       success: true,
-      maps: result.rows
+      maps: result.rows,
+      total: result.rows.length
     });
   } catch (error) {
     console.error('Maps fetch error:', error);

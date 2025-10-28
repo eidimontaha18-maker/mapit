@@ -26,16 +26,19 @@ export default async function handler(req, res) {
   try {
     const result = await pool.query(`
       SELECT 
-        o.order_id,
+        o.id as order_id,
         o.customer_id,
         o.package_id,
         o.total,
         o.status,
         o.created_at,
+        o.date_time as order_date,
         c.first_name,
         c.last_name,
         c.email,
-        p.name as package_name
+        p.name as package_name,
+        p.maps_allowed,
+        p.price
       FROM orders o
       LEFT JOIN customer c ON o.customer_id = c.customer_id
       LEFT JOIN packages p ON o.package_id = p.package_id
