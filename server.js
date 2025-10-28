@@ -314,17 +314,36 @@ app.get('/api/map/:map_id', async (req, res) => {
   }
 
   try {
-    const result = await pool.query(`
-      SELECT map_id, title, description, map_code, customer_id, country, map_data, map_bounds, active, created_at
-      FROM map
-      WHERE map_id = $1
+    // Get map with customer info
+    const mapResult = await pool.query(`
+      SELECT 
+        m.*,
+        c.first_name || ' ' || c.last_name as customer_name,
+        c.email as customer_email
+      FROM map m
+      LEFT JOIN customer c ON m.customer_id = c.customer_id
+      WHERE m.map_id = $1
     `, [map_id]);
 
-    if (result.rows.length === 0) {
+    if (mapResult.rows.length === 0) {
       return res.status(404).json({ success: false, error: 'Map not found.' });
     }
 
-    return res.json({ success: true, map: result.rows[0] });
+    // Get zones for this map
+    const zonesResult = await pool.query(`
+      SELECT id, map_id, name, color, coordinates, created_at
+      FROM zones
+      WHERE map_id = $1
+      ORDER BY created_at ASC
+    `, [map_id]);
+
+    const map = {
+      ...mapResult.rows[0],
+      zones: zonesResult.rows
+    };
+
+    console.log(`[GET /api/map/${map_id}] Found map with ${zonesResult.rows.length} zones`);
+    return res.json({ success: true, map });
   } catch (err) {
     console.error(`[GET /api/map/${map_id}] error:`, err);
     return res.status(500).json({ success: false, error: err && err.message ? err.message : 'Failed to fetch map.' });
