@@ -17,8 +17,8 @@ echo -e "${YELLOW}Target: mapit@38.242.201.28 -p 1387${NC}"
 echo -e "${YELLOW}Deploy Path: /home/mapit/public_html${NC}"
 
 # SSH connection details
-SSH_HOST="mapit@38.242.201.28"
-SSH_PORT="1387"
+SSH_HOST="mapit@109.123.241.15"
+SSH_PORT="2408"
 DEPLOY_PATH="/home/mapit/public_html"
 APP_NAME="mapit"
 
