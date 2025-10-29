@@ -32,6 +32,5 @@ export default defineConfig({
     cors: true
   },
   // For SPA routing to work - ensure all routes serve index.html
-  appType: 'spa',
-  base: '/'
+  appType: 'spa'
 })
