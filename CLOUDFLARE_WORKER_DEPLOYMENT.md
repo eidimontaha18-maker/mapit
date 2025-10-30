@@ -1,12 +1,19 @@
 # 🚀 Deploy MapIt to Cloudflare Workers
 
-## Simple 5-Minute Deployment
+## ⚡ QUICK: 5-Minute Web Dashboard Deployment
 
-**No local setup needed!** Deploy directly through Cloudflare's web dashboard.
+**No CLI! No local setup! Just use your browser.**
+
+### Before you start:
+1. Have your Neon `DATABASE_URL` from `.env` ready
+2. Create Cloudflare account at https://dash.cloudflare.com/sign-up
+3. **Read the full guide:** `CLOUDFLARE_MANUAL_SETUP_GUIDE.md` for detailed steps
 
 ---
 
-## Step 1: Get Your Neon Connection String
+## Quick Steps Summary
+
+### 1. Get Your Neon Connection String
 
 From your `.env` file, copy your DATABASE_URL:
 ```
@@ -15,19 +22,13 @@ postgresql://neondb_owner:npg_myJ8NBtrH3xo@ep-muddy-block-addvinpc-pooler.c-2.us
 
 ---
 
-## Step 2: Create Cloudflare Account (if needed)
+## 2. Create Cloudflare Account
 
-Go to https://dash.cloudflare.com/sign-up
-
----
-
-## Step 3: Create a Worker
-
-1. Go to https://dash.cloudflare.com/
-2. Click **Workers & Pages** in the sidebar
-3. Click **Create application** → **Create Worker**
-4. Name it: `mapit-api`
-5. Click **Deploy**
+Go to: https://dash.cloudflare.com/sign-up
+- Enter email
+- Create password
+- Verify email
+- Done! ✅
 
 ---
 
