@@ -1,9 +1,9 @@
 /**
- * Centralized Database Configuration - Neon PostgreSQL
+ * Centralized Database Configuration - Supabase PostgreSQL
  * 
  * This file provides a single source of truth for database configuration
- * across the entire application. All API endpoints use the Neon database
- * directly via the pg Pool connection.
+ * across the entire application. All API endpoints use the Supabase database
+ * via the pg Pool connection with Session Pooler.
  */
 
 import dotenv from 'dotenv';
@@ -14,20 +14,20 @@ const { Pool } = pg;
 // Load environment variables
 dotenv.config();
 
-// Neon Database configuration
+// Supabase Database configuration
 export const dbConfig = {
-  // Primary connection method - use DATABASE_URL from .env
+  // Primary connection method - use DATABASE_URL from .env (Supabase Session Pooler)
   connectionString: process.env.DATABASE_URL,
   
-  // SSL is required for Neon
+  // SSL is required for Supabase
   ssl: {
-    rejectUnauthorized: false // Required for Neon and other cloud providers
+    rejectUnauthorized: false // Required for Supabase and other cloud providers
   },
   
-  // Connection pool settings
+  // Connection pool settings optimized for Supabase
   max: 20, // Maximum number of clients in the pool
   idleTimeoutMillis: 30000, // How long a client is allowed to remain idle before being closed
-  connectionTimeoutMillis: 5000, // How long to wait for a connection
+  connectionTimeoutMillis: 10000, // How long to wait for a connection (increased for cloud)
 };
 
 // CORS configuration
