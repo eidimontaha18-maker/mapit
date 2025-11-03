@@ -1,11 +1,5 @@
 ﻿// API endpoint for admin maps list
-import pkg from 'pg';
-const { Pool } = pkg;
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
-});
+import pool from '../_db.js';
 
 export default async function handler(req, res) {
   // Set CORS headers

@@ -1,13 +1,6 @@
 // API endpoint for customer login
-import pkg from 'pg';
+import pool from './_db.js';
 import bcrypt from 'bcryptjs';
-
-const { Pool } = pkg;
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL?.includes('localhost') ? false : { rejectUnauthorized: false }
-});
 
 export default async function handler(req, res) {
   // Set CORS headers
